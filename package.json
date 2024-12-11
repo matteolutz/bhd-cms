@@ -16,10 +16,7 @@
     "start": "cross-env NODE_ENV=production node ./build/server.js",
     "start:mocks": "cross-env NODE_ENV=production node --require ./mocks --require dotenv/config ./build/server.js",
     "test": "vitest",
-    "test:e2e:dev": "start-server-and-test dev http://localhost:3000 \"npx cypress open\"",
-    "pretest:e2e:run": "npm run build",
-    "test:e2e:run": "cross-env PORT=8811 start-server-and-test start:mocks http://localhost:8811 \"npx cypress run\"",
-    "typecheck": "tsc && tsc -p cypress",
+    "typecheck": "tsc",
     "validate": "npm-run-all --parallel \"test -- --run\" lint typecheck test:e2e:run"
   },
   "eslintIgnore": [
@@ -51,7 +48,6 @@
   "devDependencies": {
     "@faker-js/faker": "^9.0.3",
     "@remix-run/dev": "^2.15.1",
-    "@testing-library/cypress": "^10.0.2",
     "@testing-library/jest-dom": "^6.5.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.7.5",
@@ -69,13 +65,11 @@
     "@vitest/coverage-v8": "^2.1.2",
     "autoprefixer": "^10.4.20",
     "cookie": "^0.6.0",
-    "cypress": "^13.15.0",
     "dotenv": "^16.4.5",
     "esbuild": "^0.24.0",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.3",
-    "eslint-plugin-cypress": "^3.5.0",
     "eslint-plugin-import": "^2.30.0",
     "eslint-plugin-jest": "^28.8.3",
     "eslint-plugin-jest-dom": "^5.4.0",

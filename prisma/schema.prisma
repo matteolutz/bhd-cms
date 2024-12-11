@@ -15,7 +15,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   password Password?
-  notes    Note[]
+  Project  Project[]
 }
 
 model Password {
@@ -25,14 +25,33 @@ model Password {
   userId String @unique
 }
 
-model Note {
+model Project {
   id    String @id @default(cuid())
   title String
-  body  String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String
+
+  contentBlocks ContentBlock[]
+}
+
+model ContentBlock {
+  id      String           @id @default(cuid())
+  type    ContentBlockType
+  content Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  projectId String
+}
+
+enum ContentBlockType {
+  PAGE
+  UI_COMPONENT
+  CONFIG
 }

@@ -49,4 +49,13 @@ COPY --from=build /myapp/build /myapp/build
 COPY --from=build /myapp/public /myapp/public
 ADD . .
 
+ARG POSTGRES_URL
+ENV POSTGRES_URL $POSTGRES_URL
+
+ARG SESSION_SECRET
+ENV SESSION_SECRET $SESSION_SECRET
+
+ARG PORT
+ENV PORT $PORT
+
 CMD ["npm", "start"]
