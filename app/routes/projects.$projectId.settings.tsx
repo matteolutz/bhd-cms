@@ -10,11 +10,14 @@ import {
 import { Button } from "~/components/ui/button";
 import {
   createProjectAccessToken,
+  deleteProjectAccessToken,
   getProjectAccessToken,
+  getProjectByIdForUserId,
 } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
 
 const INTENT_GENERATE_ACCESS = "GENERATE_ACCESS";
+const INTENT_DELETE_ACCESS = "DELETE_ACCESS";
 
 export const loader = async ({
   request,
@@ -29,12 +32,20 @@ export const action = async ({
   request,
   params: { projectId },
 }: ActionFunctionArgs) => {
+  const userId = await requireUserId(request);
+
+  const project = await getProjectByIdForUserId(projectId ?? "", userId);
+  if (!project) return { error: "Project not found!" };
+
   const formData = await request.formData();
 
   const intent = formData.get("intent");
   switch (intent) {
     case INTENT_GENERATE_ACCESS: {
-      return createProjectAccessToken(projectId ?? "");
+      return createProjectAccessToken(project.id);
+    }
+    case INTENT_DELETE_ACCESS: {
+      return deleteProjectAccessToken(project.id);
     }
   }
 };
@@ -48,18 +59,38 @@ const ProjectPageSettings = () => {
 
       <div className="flex flex-col gap-2">
         <TypographyH4>Access Token</TypographyH4>
-        {accessToken ? (
-          <TypographyInlineCode className="w-fit">
-            {accessToken}
-          </TypographyInlineCode>
-        ) : (
-          <Form method="post">
-            <TypographyP>No access token generated yet.</TypographyP>
-            <Button type="submit" name="intent" value={INTENT_GENERATE_ACCESS}>
-              Generate Access Token
-            </Button>
-          </Form>
-        )}
+        <div className="flex items-center gap-2">
+          {accessToken ? (
+            <>
+              <TypographyInlineCode className="h-fit w-fit">
+                {accessToken}
+              </TypographyInlineCode>
+              <Form method="post">
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  name="intent"
+                  value={INTENT_DELETE_ACCESS}
+                >
+                  Delete Access Token
+                </Button>
+              </Form>
+            </>
+          ) : (
+            <>
+              <TypographyP>No access token generated yet.</TypographyP>
+              <Form method="post">
+                <Button
+                  type="submit"
+                  name="intent"
+                  value={INTENT_GENERATE_ACCESS}
+                >
+                  Generate Access Token
+                </Button>
+              </Form>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

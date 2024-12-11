@@ -73,6 +73,22 @@ const ProjectPageLayout = () => {
                     )}
                   </NavLink>
                 </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>Content</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <NavLink to="blueprints">
+                    {({ isActive }) => (
+                      <SidebarMenuButton isActive={isActive}>
+                        <span>📐</span> <span>Content Block Blueprints</span>
+                      </SidebarMenuButton>
+                    )}
+                  </NavLink>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <NavLink to="blocks">
                     {({ isActive }) => (
@@ -82,6 +98,13 @@ const ProjectPageLayout = () => {
                     )}
                   </NavLink>
                 </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>Settings</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
                 <SidebarMenuItem>
                   <NavLink to="settings">
                     {({ isActive }) => (

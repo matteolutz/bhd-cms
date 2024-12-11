@@ -1,18 +1,34 @@
-import { ContentBlock} from "@prisma/client";
+import { ContentBlock, Project } from "@prisma/client";
+
 import { prisma } from "~/db.server";
 
 export type { ContentBlock } from "@prisma/client";
 
 type ContentBlockPageContent = {
-  children: Array<string>;
+  children: string[];
 } & Record<string, unknown>;
 
 type ContentBlockUiComponentContent = Record<string, unknown>;
 type ContentBlockConfigContent = Record<string, unknown>;
 
-export const getAllContentBlocksInProject = (projectId: string): Promise<Array<ContentBlock> =>
+export const getContentBlockByIdForProject = (
+  id: ContentBlock["id"],
+  projectId: Project["id"],
+): Promise<ContentBlock | null> =>
+  prisma.contentBlock.findUnique({
+    where: {
+      id,
+      contentBlockBlueprint: { projectId },
+    },
+    include: { contentBlockBlueprint: { select: { projectId: true } } },
+  });
+
+export const getAllContentBlocksInProject = (
+  projectId: Project["id"],
+): Promise<ContentBlock[]> =>
   prisma.contentBlock.findMany({
     where: {
-      projectId: projectId,
+      contentBlockBlueprint: { projectId },
     },
+    include: { contentBlockBlueprint: { select: { projectId: true } } },
   });
