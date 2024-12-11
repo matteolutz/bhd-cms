@@ -1,5 +1,5 @@
 {
-  "name": "bhd-cms",
+  "name": "bhd-cms-9bd9",
   "private": true,
   "sideEffects": false,
   "scripts": {
@@ -11,7 +11,6 @@
     "dev:server": "cross-env NODE_ENV=development npm run build:server -- --watch",
     "docker": "docker compose up -d",
     "format": "prettier --write .",
-    "format:repo": "npm run format && npm run lint -- --fix",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "setup": "prisma generate && prisma migrate deploy && prisma db seed",
     "start": "cross-env NODE_ENV=production node ./build/server.js",
