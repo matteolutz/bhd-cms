@@ -1,8 +1,14 @@
 import { ContentBlockType } from "@prisma/client";
-import { ActionFunctionArgs } from "@remix-run/node";
-import { Form } from "@remix-run/react";
+import {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  redirect,
+} from "@remix-run/node";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import { Delete } from "lucide-react";
 import { useState } from "react";
 import { TypographyH3 } from "~/components/typography";
+import { Alert } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
@@ -17,19 +23,72 @@ import {
 import {
   ALL_BLUEPRINT_SCHEMA_VALUE_TYPES,
   ContentBlockBlueprintSchemaValue,
+  ContentBlockBlueprintSchemaValueType,
+  createContentBlockBlueprint,
+  getAllContentBlockBlueprintsForProjectAndUser,
 } from "~/models/contentBlockBlueprint";
+import { getProjectByIdForUserId } from "~/models/project.server";
+import { requireUserId } from "~/session.server";
+import omit from "~/utils/omit";
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({
+  request,
+  params: { projectId },
+}: ActionFunctionArgs) => {
+  if (!projectId) {
+    return { stauts: "error" };
+  }
+
+  const userId = await requireUserId(request);
+  const project = await getProjectByIdForUserId(projectId, userId);
+
+  if (!project) {
+    return { status: "error" };
+  }
+
   const formData = await request.formData();
 
-  const blueprintName = formData.get("name");
-  const blueprintType = formData.get("type");
+  const blueprintName = formData.get("name") as string;
+  const blueprintType = formData.get("type") as ContentBlockType;
   const blueprintFields = JSON.parse(formData.get("fields") as string);
 
-  return "hello";
+  if (
+    !blueprintName ||
+    blueprintName === "" ||
+    !blueprintType ||
+    !Object.keys(ContentBlockType).includes(blueprintType as string)
+  ) {
+    return { status: "error" };
+  }
+
+  await createContentBlockBlueprint(
+    blueprintName,
+    blueprintType,
+    blueprintFields,
+    project.id,
+  );
+
+  return redirect("../blueprints");
+};
+
+export const loader = async ({
+  request,
+  params: { projectId },
+}: LoaderFunctionArgs) => {
+  const userId = await requireUserId(request);
+
+  if (!projectId) throw new Error("Project id required");
+
+  const contentBlockBlueprints =
+    await getAllContentBlockBlueprintsForProjectAndUser(projectId, userId);
+
+  return { contentBlockBlueprints };
 };
 
 const ProjectPageBlueprintNew = () => {
+  const { contentBlockBlueprints } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
+
   const [fields, setFields] = useState<
     Record<
       string,
@@ -45,6 +104,11 @@ const ProjectPageBlueprintNew = () => {
   return (
     <div className="flex flex-col gap-2">
       <TypographyH3 className="mt-0">New Blueprint</TypographyH3>
+
+      {actionData?.status === "error" && (
+        <Alert variant="destructive">Error</Alert>
+      )}
+
       <Form className="flex flex-col gap-8 p-2" method="post">
         <div className="flex flex-col gap-2">
           <Label htmlFor="inputName">Name</Label>
@@ -72,7 +136,16 @@ const ProjectPageBlueprintNew = () => {
 
           {Object.entries(fields).map(([name, value]) => (
             <div key={name} className="flex flex-col gap-3 p-2">
-              <h5>{name}</h5>
+              <div className="flex items-center gap-2">
+                <h5>{name}</h5>
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={() => setFields((old) => omit(old, name))}
+                >
+                  Delete Field
+                </Button>
+              </div>
 
               <div className="flex items-center gap-4">
                 <Select
@@ -113,6 +186,45 @@ const ProjectPageBlueprintNew = () => {
                     checked={value.optional}
                   />
                 </div>
+              </div>
+              <div>
+                {
+                  {
+                    block: (
+                      <Select
+                        onValueChange={(newBlockType) =>
+                          setFields({
+                            ...fields,
+                            [name]: {
+                              ...value,
+                              value: {
+                                ...value.value,
+                                blockType: newBlockType,
+                              } as ContentBlockBlueprintSchemaValue,
+                            },
+                          })
+                        }
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-expect-error
+                        value={value.value.blockType}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose Block Blueprint" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {contentBlockBlueprints.map((bp) => (
+                            <SelectItem key={bp.id} value={bp.id}>
+                              {bp.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ),
+                    array: null,
+                    string: null,
+                    number: null,
+                  }[value.value.type]
+                }
               </div>
             </div>
           ))}

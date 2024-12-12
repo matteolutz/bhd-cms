@@ -1,4 +1,5 @@
-import { ContentBlockBlueprint } from "@prisma/client";
+import { ContentBlockBlueprint, Project, User } from "@prisma/client";
+import { prisma } from "~/db.server";
 
 export const ALL_BLUEPRINT_SCHEMA_VALUE_TYPES = [
   "array",
@@ -29,3 +30,32 @@ export type ContentBlockBlueprintSchema = Record<
   string,
   ContentBlockBlueprintSchemaValue & { optional?: boolean }
 >;
+
+export const getAllContentBlockBlueprintsForProjectAndUser = (
+  projectId: Project["id"],
+  userId: User["id"],
+): Promise<ContentBlockBlueprint[]> =>
+  prisma.contentBlockBlueprint.findMany({
+    where: {
+      projectId,
+      project: { userId },
+    },
+    include: {
+      project: { select: { userId: true } },
+    },
+  });
+
+export const createContentBlockBlueprint = (
+  name: ContentBlockBlueprint["name"],
+  type: ContentBlockBlueprint["type"],
+  schema: ContentBlockBlueprint["schema"],
+  projectId: Project["id"],
+): Promise<ContentBlockBlueprint> =>
+  prisma.contentBlockBlueprint.create({
+    data: {
+      projectId,
+      name,
+      type,
+      schema: schema ?? {},
+    },
+  });
