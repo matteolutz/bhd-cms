@@ -55,7 +55,7 @@ const ProjectPageSettings = () => {
 
   return (
     <div className="flex flex-col gap-4 divide-y">
-      <TypographyH3>Settings</TypographyH3>
+      <TypographyH3 className="mt-0">Settings</TypographyH3>
 
       <div className="flex flex-col gap-2">
         <TypographyH4>Access Token</TypographyH4>
