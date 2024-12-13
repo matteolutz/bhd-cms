@@ -16,5 +16,5 @@ export const loader = async ({
 
   invariantFieldRequired(block, { message: "Block not found" });
 
-  return { block };
+  return cors();
 };
