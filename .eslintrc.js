@@ -23,6 +23,11 @@ module.exports = {
   // Base config
   extends: ["eslint:recommended"],
 
+  ignorePatterns: [
+    // ignore shadcn-ui components
+    "app/components/ui",
+  ],
+
   overrides: [
     // React
     {

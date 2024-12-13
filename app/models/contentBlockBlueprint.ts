@@ -1,11 +1,15 @@
 import { ContentBlockBlueprint, Project, User } from "@prisma/client";
+
 import { prisma } from "~/db.server";
+
+import { z } from "zod";
 
 export const ALL_BLUEPRINT_SCHEMA_VALUE_TYPES = [
   "array",
   "string",
   "number",
   "block",
+  "blueprint-block",
 ] as const;
 export type ContentBlockBlueprintSchemaValueType =
   (typeof ALL_BLUEPRINT_SCHEMA_VALUE_TYPES)[number];
@@ -23,13 +27,79 @@ export type ContentBlockBlueprintSchemaValue =
     }
   | {
       type: "block";
-      blockType?: ContentBlockBlueprint["id"];
+      tag?: ContentBlockBlueprint["tag"];
+    }
+  | {
+      type: "blueprint-block";
+      blueprint: ContentBlockBlueprint["id"];
     };
 
 export type ContentBlockBlueprintSchema = Record<
   string,
   ContentBlockBlueprintSchemaValue & { optional?: boolean }
 >;
+
+export const getDisplayNameForContentBlockBlueprintSchemaValue = (
+  value: ContentBlockBlueprintSchemaValue & { optional?: boolean },
+): string => {
+  const name = (() => {
+    switch (value.type) {
+      case "array":
+        return `(${getDisplayNameForContentBlockBlueprintSchemaValue(value.itemType)})[]`;
+      case "string":
+        return "string";
+      case "number":
+        return "number";
+      case "block":
+        return value.tag ? `block (tag: ${value.tag})` : "block";
+      case "blueprint-block":
+        return `blueprint-block (${value.blueprint})`;
+    }
+  })();
+
+  return value.optional ? `${name}?` : name;
+};
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+const getZodSchemaForContentBlockBlueprintSchemaValue = (
+  value: ContentBlockBlueprintSchemaValue,
+  optional: boolean,
+) => {
+  switch (value.type) {
+    case "array":
+      return z.array(
+        getZodSchemaForContentBlockBlueprintSchemaValue(
+          value.itemType,
+          optional,
+        ),
+      );
+    case "string":
+      return optional ? z.string().optional() : z.string();
+    case "number":
+      return optional ? z.number().optional() : z.number();
+    case "block":
+      return optional ? z.string().optional() : z.string();
+    case "blueprint-block":
+      return optional ? z.string().optional() : z.string();
+  }
+};
+
+export const getZodSchemaForContentBlockBlueprintSchema = (
+  schema: ContentBlockBlueprintSchema,
+) => {
+  return z.object(
+    Object.fromEntries(
+      Object.entries(schema).map(([key, value]) => [
+        key,
+        getZodSchemaForContentBlockBlueprintSchemaValue(
+          value,
+          value.optional ?? false,
+        ),
+      ]),
+    ),
+  );
+};
 
 export const getAllContentBlockBlueprintsForProjectAndUser = (
   projectId: Project["id"],
@@ -45,9 +115,27 @@ export const getAllContentBlockBlueprintsForProjectAndUser = (
     },
   });
 
+export const updateContentBlockBlueprint = (
+  id: ContentBlockBlueprint["id"],
+  name: ContentBlockBlueprint["name"],
+  type: ContentBlockBlueprint["type"],
+  tag: ContentBlockBlueprint["tag"],
+  schema: ContentBlockBlueprint["schema"],
+): Promise<ContentBlockBlueprint> =>
+  prisma.contentBlockBlueprint.update({
+    where: { id },
+    data: {
+      name,
+      tag,
+      type,
+      schema: schema ?? {},
+    },
+  });
+
 export const createContentBlockBlueprint = (
   name: ContentBlockBlueprint["name"],
   type: ContentBlockBlueprint["type"],
+  tag: ContentBlockBlueprint["tag"],
   schema: ContentBlockBlueprint["schema"],
   projectId: Project["id"],
 ): Promise<ContentBlockBlueprint> =>
@@ -55,7 +143,21 @@ export const createContentBlockBlueprint = (
     data: {
       projectId,
       name,
+      tag,
       type,
       schema: schema ?? {},
     },
+  });
+
+export const getContentBlockBlueprintById = (id: ContentBlockBlueprint["id"]) =>
+  prisma.contentBlockBlueprint.findUnique({
+    where: { id },
+  });
+
+export const getContentBlockBlueprintByIdForProject = (
+  id: ContentBlockBlueprint["id"],
+  projectId: Project["id"],
+) =>
+  prisma.contentBlockBlueprint.findUnique({
+    where: { id, projectId },
   });

@@ -25,12 +25,13 @@ import {
 import { getProjectByIdForUserId } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
 import { useUser } from "~/utils";
+import { invariantFieldRequired } from "~/utils/invariant";
 
 export const loader = async ({
   request,
   params: { projectId },
 }: LoaderFunctionArgs) => {
-  if (!projectId) throw new Error("Missing projectId");
+  invariantFieldRequired(projectId, "projectId");
 
   const userId = await requireUserId(request);
   const project = await getProjectByIdForUserId(projectId, userId);
@@ -84,7 +85,7 @@ const ProjectPageLayout = () => {
                   <NavLink to="blueprints">
                     {({ isActive }) => (
                       <SidebarMenuButton isActive={isActive}>
-                        <span>📐</span> <span>Content Block Blueprints</span>
+                        <span>📐</span> <span>Blueprints</span>
                       </SidebarMenuButton>
                     )}
                   </NavLink>

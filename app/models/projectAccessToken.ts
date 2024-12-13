@@ -3,7 +3,8 @@ import { ProjectAccessToken } from "@prisma/client";
 import { prisma } from "~/db.server";
 
 import { getProjectById, Project } from "./project.server";
-
+import { invariantFieldRequired } from "~/utils/invariant";
+import { Projector } from "lucide-react";
 
 export const getProjectIdFromAccessToken = async (
   token: ProjectAccessToken["token"],
@@ -18,18 +19,18 @@ export const requireProjectAccessToken = async (
   const authorizationHeader = request.headers.get("Authorization");
 
   if (!authorizationHeader) throw new Error("Unauthorized");
+  invariantFieldRequired(authorizationHeader, "Authorization-Header");
 
   const accessToken = /^Bearer\s(.*)$/.exec(authorizationHeader);
-
-  if (!accessToken) throw new Error("Unauthorized");
+  invariantFieldRequired(accessToken, "Authorization: Bearer <token>");
 
   const projectId = await getProjectIdFromAccessToken(accessToken[1]);
 
-  if (!projectId) throw new Error("Project not found");
+  invariantFieldRequired(projectId, { message: "Project not found." });
 
   const project = await getProjectById(projectId);
 
-  if (!project) throw new Error("Unauthorized");
+  invariantFieldRequired(project, { message: "Project not found." });
 
   return project;
 };

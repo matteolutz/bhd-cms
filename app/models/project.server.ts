@@ -1,6 +1,7 @@
 import { Project, ProjectAccessToken, User } from "@prisma/client";
 
 import { prisma } from "~/db.server";
+
 import { ContentBlockBlueprintSchema } from "./contentBlockBlueprint";
 
 export type { Project } from "@prisma/client";

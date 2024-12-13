@@ -4,9 +4,10 @@ import {
   LoaderFunctionArgs,
   redirect,
 } from "@remix-run/node";
-import { Form, useActionData, useLoaderData } from "@remix-run/react";
-import { Delete } from "lucide-react";
+import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
+
 import { TypographyH3 } from "~/components/typography";
 import { Alert } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
@@ -22,18 +23,22 @@ import {
 } from "~/components/ui/select";
 import {
   ALL_BLUEPRINT_SCHEMA_VALUE_TYPES,
+  ContentBlockBlueprintSchema,
   ContentBlockBlueprintSchemaValue,
-  ContentBlockBlueprintSchemaValueType,
   createContentBlockBlueprint,
   getAllContentBlockBlueprintsForProjectAndUser,
+  getContentBlockBlueprintById,
+  getContentBlockBlueprintByIdForProject,
+  updateContentBlockBlueprint,
 } from "~/models/contentBlockBlueprint";
 import { getProjectByIdForUserId } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
+import { invariantFieldRequired } from "~/utils/invariant";
 import omit from "~/utils/omit";
 
 export const action = async ({
   request,
-  params: { projectId },
+  params: { projectId, bpId },
 }: ActionFunctionArgs) => {
   if (!projectId) {
     return { stauts: "error" };
@@ -49,8 +54,9 @@ export const action = async ({
   const formData = await request.formData();
 
   const blueprintName = formData.get("name") as string;
+  const blueprintTag = formData.get("tag") as string;
   const blueprintType = formData.get("type") as ContentBlockType;
-  const blueprintFields = JSON.parse(formData.get("fields") as string);
+  const blueprintFields = JSON.parse(formData.get("schema") as string);
 
   if (
     !blueprintName ||
@@ -61,65 +67,124 @@ export const action = async ({
     return { status: "error" };
   }
 
-  await createContentBlockBlueprint(
-    blueprintName,
-    blueprintType,
-    blueprintFields,
-    project.id,
-  );
+  if (bpId) {
+    const blueprint = await getContentBlockBlueprintByIdForProject(
+      bpId,
+      project.id,
+    );
+    if (!blueprint) {
+      return { status: "error", reason: "Blueprint not found." };
+    }
+
+    await updateContentBlockBlueprint(
+      blueprint.id,
+      blueprintName,
+      blueprintType,
+      !blueprintTag || blueprintTag === "" ? null : blueprintTag,
+      blueprintFields,
+    );
+  } else {
+    await createContentBlockBlueprint(
+      blueprintName,
+      blueprintType,
+      !blueprintTag || blueprintTag === "" ? null : blueprintTag,
+      blueprintFields,
+      project.id,
+    );
+  }
 
   return redirect("../blueprints");
 };
 
 export const loader = async ({
   request,
-  params: { projectId },
+  params: { projectId, bpId },
 }: LoaderFunctionArgs) => {
   const userId = await requireUserId(request);
 
-  if (!projectId) throw new Error("Project id required");
+  invariantFieldRequired(projectId, "projectId");
 
   const contentBlockBlueprints =
     await getAllContentBlockBlueprintsForProjectAndUser(projectId, userId);
 
-  return { contentBlockBlueprints };
+  if (bpId) {
+    const blueprint = contentBlockBlueprints.find((bp) => bp.id === bpId);
+    invariantFieldRequired(blueprint, { message: "Blueprint not found." });
+    return { contentBlockBlueprints, blueprint };
+  }
+
+  return { contentBlockBlueprints, blueprint: null };
 };
 
-const ProjectPageBlueprintNew = () => {
-  const { contentBlockBlueprints } = useLoaderData<typeof loader>();
+const ProjectPageBlueprintEdit = () => {
+  const { contentBlockBlueprints, blueprint } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
-  const [fields, setFields] = useState<
-    Record<
-      string,
-      {
-        value: ContentBlockBlueprintSchemaValue;
-        optional: boolean;
-      }
-    >
-  >({});
+  const [blueprintName, setBlueprintName] = useState(
+    blueprint ? blueprint.name : "",
+  );
+  const [blueprintTag, setBlueprintTag] = useState(
+    blueprint ? (blueprint.tag ?? "") : "",
+  );
+  const [blueprintType, setBlueprintType] = useState(
+    blueprint ? blueprint.type : "",
+  );
+
+  const [schema, setSchema] = useState<ContentBlockBlueprintSchema>(
+    blueprint ? (blueprint.schema as ContentBlockBlueprintSchema) : {},
+  );
 
   const [newFieldInputValue, setNewFieldInputValue] = useState("");
 
   return (
     <div className="flex flex-col gap-2">
-      <TypographyH3 className="mt-0">New Blueprint</TypographyH3>
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" asChild>
+          <Link to="../blueprints">
+            <ChevronLeft />
+          </Link>
+        </Button>
+        <TypographyH3 className="mt-0">
+          {blueprint ? `Edit Blueprint "${blueprint.name}"` : "New Blueprint"}
+        </TypographyH3>
+      </div>
 
-      {actionData?.status === "error" && (
+      {actionData?.status === "error" ? (
         <Alert variant="destructive">Error</Alert>
-      )}
+      ) : null}
 
       <Form className="flex flex-col gap-8 p-2" method="post">
         <div className="flex flex-col gap-2">
           <Label htmlFor="inputName">Name</Label>
-          <Input id="inputName" name="name" type="text" />
+          <Input
+            value={blueprintName}
+            onChange={(e) => setBlueprintName(e.target.value)}
+            id="inputName"
+            name="name"
+            type="text"
+          />
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="selectType">Block Type</Label>
-          <Select name="type">
+          <Label htmlFor="inputTag">Tag (optional)</Label>
+          <Input
+            value={blueprintTag}
+            onChange={(e) => setBlueprintTag(e.target.value)}
+            id="inputTag"
+            name="tag"
+            type="text"
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="selectType">Blueprint Type</Label>
+          <Select
+            value={blueprintType}
+            onValueChange={setBlueprintType}
+            name="type"
+          >
             <SelectTrigger id="selectType">
-              <SelectValue placeholder="Choose a block type" />
+              <SelectValue placeholder="Choose a blueprint type" />
             </SelectTrigger>
             <SelectContent>
               {Object.keys(ContentBlockType).map((k) => (
@@ -132,16 +197,16 @@ const ProjectPageBlueprintNew = () => {
         </div>
 
         <div className="flex flex-col gap-2 divide-y">
-          <h4>Fields</h4>
+          <h4>Schema</h4>
 
-          {Object.entries(fields).map(([name, value]) => (
+          {Object.entries(schema).map(([name, value]) => (
             <div key={name} className="flex flex-col gap-3 p-2">
               <div className="flex items-center gap-2">
                 <h5>{name}</h5>
                 <Button
                   type="button"
                   variant="link"
-                  onClick={() => setFields((old) => omit(old, name))}
+                  onClick={() => setSchema((old) => omit(old, name))}
                 >
                   Delete Field
                 </Button>
@@ -150,17 +215,15 @@ const ProjectPageBlueprintNew = () => {
               <div className="flex items-center gap-4">
                 <Select
                   onValueChange={(newValueType) =>
-                    setFields({
-                      ...fields,
+                    setSchema({
+                      ...schema,
                       [name]: {
                         ...value,
-                        value: {
-                          type: newValueType,
-                        } as ContentBlockBlueprintSchemaValue,
-                      },
+                        type: newValueType,
+                      } as ContentBlockBlueprintSchemaValue,
                     })
                   }
-                  value={value.value.type}
+                  value={value.type}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a field type" />
@@ -178,8 +241,8 @@ const ProjectPageBlueprintNew = () => {
                   <Label>Optional?</Label>
                   <Checkbox
                     onCheckedChange={(checked) =>
-                      setFields({
-                        ...fields,
+                      setSchema({
+                        ...schema,
                         [name]: { ...value, optional: !!checked },
                       })
                     }
@@ -190,23 +253,20 @@ const ProjectPageBlueprintNew = () => {
               <div>
                 {
                   {
-                    block: (
+                    "blueprint-block": (
                       <Select
-                        onValueChange={(newBlockType) =>
-                          setFields({
-                            ...fields,
+                        onValueChange={(newBlueprint) =>
+                          setSchema({
+                            ...schema,
                             [name]: {
                               ...value,
-                              value: {
-                                ...value.value,
-                                blockType: newBlockType,
-                              } as ContentBlockBlueprintSchemaValue,
-                            },
+                              blueprint: newBlueprint,
+                            } as ContentBlockBlueprintSchemaValue,
                           })
                         }
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                         // @ts-expect-error
-                        value={value.value.blockType}
+                        value={value.blueprint}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Choose Block Blueprint" />
@@ -220,10 +280,30 @@ const ProjectPageBlueprintNew = () => {
                         </SelectContent>
                       </Select>
                     ),
+                    block: (
+                      <Input
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-expect-error
+                        value={value.tag}
+                        onChange={(e) =>
+                          setSchema({
+                            ...schema,
+                            [name]: {
+                              ...value,
+                              ...(e.target.value && e.target.value !== ""
+                                ? { tag: e.target.value }
+                                : {}),
+                            } as ContentBlockBlueprintSchemaValue,
+                          })
+                        }
+                        type="text"
+                        placeholder="Block Tag (optional)"
+                      />
+                    ),
                     array: null,
                     string: null,
                     number: null,
-                  }[value.value.type]
+                  }[value.type]
                 }
               </div>
             </div>
@@ -237,15 +317,16 @@ const ProjectPageBlueprintNew = () => {
             />
             <Button
               type="button"
+              variant="outline"
               onClick={() => {
-                if (newFieldInputValue in fields) return;
-                setFields({
-                  ...fields,
+                if (newFieldInputValue in schema) return;
+                setSchema({
+                  ...schema,
                   [newFieldInputValue]: {
-                    value: {
-                      type: "string",
-                    } as ContentBlockBlueprintSchemaValue,
+                    type: "string",
                     optional: false,
+                  } as ContentBlockBlueprintSchemaValue & {
+                    optional?: boolean;
                   },
                 });
                 setNewFieldInputValue("");
@@ -256,12 +337,14 @@ const ProjectPageBlueprintNew = () => {
           </div>
         </div>
 
-        <input name="fields" type="hidden" value={JSON.stringify(fields)} />
+        <input name="schema" type="hidden" value={JSON.stringify(schema)} />
 
-        <Button type="submit">Create Blueprint</Button>
+        <Button type="submit">
+          {blueprint ? "Save Blueprint" : "Create Blueprint"}
+        </Button>
       </Form>
     </div>
   );
 };
 
-export default ProjectPageBlueprintNew;
+export default ProjectPageBlueprintEdit;

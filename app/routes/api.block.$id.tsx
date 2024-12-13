@@ -1,7 +1,8 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
-import { getContentBlockByIdForProject } from "~/models/contentBlock.server";
 
+import { getContentBlockByIdForProject } from "~/models/contentBlock.server";
 import { requireProjectAccessToken } from "~/models/projectAccessToken";
+import { invariantFieldRequired } from "~/utils/invariant";
 
 export const loader = async ({
   request,
@@ -9,11 +10,11 @@ export const loader = async ({
 }: LoaderFunctionArgs) => {
   const project = await requireProjectAccessToken(request);
 
-  if (!id) throw new Error("Block id is required");
+  invariantFieldRequired(id, "id");
 
   const block = await getContentBlockByIdForProject(id, project.id);
 
-  if (!block) throw new Error("Block not found");
+  invariantFieldRequired(block, { message: "Block not found" });
 
   return { block };
 };
