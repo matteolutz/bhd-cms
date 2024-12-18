@@ -44,6 +44,17 @@ async function run() {
     res.set("x-fly-region", process.env.FLY_REGION ?? "unknown");
     res.set("Strict-Transport-Security", `max-age=${60 * 60 * 24 * 365 * 100}`);
 
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS",
+    );
+    res.header(
+      "Access-Control-Allow-Headers",
+      // eslint-disable-next-line max-len
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+    );
+
     // /clean-urls/ -> /clean-urls
     if (req.path.endsWith("/") && req.path.length > 1) {
       const query = req.url.slice(req.path.length);
@@ -54,31 +65,8 @@ async function run() {
     next();
   });
 
-  // if we're not in the primary region, then we need to make sure all
-  // non-GET/HEAD/OPTIONS requests hit the primary region rather than read-only
-  // Postgres DBs.
-  // learn more: https://fly.io/docs/getting-started/multi-region-databases/#replay-the-request
-  app.all("*", function getReplayResponse(req, res, next) {
-    const { method, path: pathname } = req;
-    const { PRIMARY_REGION, FLY_REGION } = process.env;
-
-    const isMethodReplayable = !["GET", "OPTIONS", "HEAD"].includes(method);
-    const isReadOnlyRegion =
-      FLY_REGION && PRIMARY_REGION && FLY_REGION !== PRIMARY_REGION;
-
-    const shouldReplay = isMethodReplayable && isReadOnlyRegion;
-
-    if (!shouldReplay) return next();
-
-    const logInfo = {
-      pathname,
-      method,
-      PRIMARY_REGION,
-      FLY_REGION,
-    };
-    console.info(`Replaying:`, logInfo);
-    res.set("fly-replay", `region=${PRIMARY_REGION}`);
-    return res.sendStatus(409);
+  app.options("*", (_req, res) => {
+    res.send();
   });
 
   app.use(compression());

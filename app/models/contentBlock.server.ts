@@ -1,5 +1,4 @@
 import { ContentBlock, Project } from "@prisma/client";
-import e from "express";
 
 import { prisma } from "~/db.server";
 
@@ -15,7 +14,9 @@ export const getContentBlockByIdForProject = (
       contentBlockBlueprint: { projectId },
     },
     include: {
-      contentBlockBlueprint: { select: { projectId: true, tag: true } },
+      contentBlockBlueprint: {
+        select: { projectId: true, tag: true, name: true },
+      },
     },
   });
 
