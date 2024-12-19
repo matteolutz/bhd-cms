@@ -1,10 +1,9 @@
 import { ProjectAccessToken } from "@prisma/client";
 
 import { prisma } from "~/db.server";
+import { invariantFieldRequired } from "~/utils/invariant";
 
 import { getProjectById, Project } from "./project.server";
-import { invariantFieldRequired } from "~/utils/invariant";
-import { Projector } from "lucide-react";
 
 export const getProjectIdFromAccessToken = async (
   token: ProjectAccessToken["token"],
@@ -18,7 +17,6 @@ export const requireProjectAccessToken = async (
 ): Promise<Project> => {
   const authorizationHeader = request.headers.get("Authorization");
 
-  if (!authorizationHeader) throw new Error("Unauthorized");
   invariantFieldRequired(authorizationHeader, "Authorization-Header");
 
   const accessToken = /^Bearer\s(.*)$/.exec(authorizationHeader);

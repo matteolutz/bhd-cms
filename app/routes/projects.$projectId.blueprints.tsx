@@ -1,10 +1,23 @@
-import { ContentBlockBlueprint } from "@prisma/client";
-import { LoaderFunctionArgs } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
-import { Edit } from "lucide-react";
-import { useEffect } from "react";
+import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import { Link, useLoaderData, Form } from "@remix-run/react";
+import { Trash, Edit } from "lucide-react";
 
-import { TypographyH3, TypographyH4 } from "~/components/typography";
+import {
+  TypographyH3,
+  TypographyH4,
+  TypographyInlineCode,
+} from "~/components/typography";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
@@ -16,6 +29,7 @@ import {
 } from "~/components/ui/card";
 import {
   ContentBlockBlueprintSchema,
+  deleteContentBlockBlueprintForProjectAndUser,
   getAllContentBlockBlueprintsForProjectAndUser,
   getDisplayNameForContentBlockBlueprintSchemaValue,
 } from "~/models/contentBlockBlueprint";
@@ -35,6 +49,24 @@ export const loader = async ({
     userId,
   );
   return { blueprints };
+};
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData();
+
+  switch (request.method) {
+    case "DELETE": {
+      const blueprintId = formData.get("blueprintId");
+      const userId = await requireUserId(request);
+      await deleteContentBlockBlueprintForProjectAndUser(
+        blueprintId as string,
+        userId,
+      );
+      break;
+    }
+  }
+
+  return null;
 };
 
 const ProjectPageBlueprints = () => {
@@ -90,6 +122,42 @@ const ProjectPageBlueprints = () => {
                           <Edit />
                         </Link>
                       </Button>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" type="button">
+                            <Trash />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Delete Blueprint{" "}
+                              <TypographyInlineCode>
+                                {blueprint.name}
+                              </TypographyInlineCode>
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action is permanent and cannot be undone. All
+                              Content-Blocks to this Blueprint will also be
+                              deleted!
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <Form method="DELETE">
+                              <input
+                                type="hidden"
+                                name="blueprintId"
+                                value={blueprint.id}
+                              />
+                              <AlertDialogAction type="submit">
+                                Delete
+                              </AlertDialogAction>
+                            </Form>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </CardContent>
                 </Card>

@@ -37,6 +37,8 @@ model Project {
 
   projectAccessToken    ProjectAccessToken[]
   contentBlockBlueprint ContentBlockBlueprint[]
+
+  assets Asset[]
 }
 
 model ProjectAccessToken {
@@ -83,4 +85,30 @@ enum ContentBlockType {
   PAGE
   UI_COMPONENT
   CONFIG
+}
+
+model Asset {
+  id   String @id @default(cuid())
+  name String
+
+  mimeType String
+  fileName String
+
+  tag String?
+
+  assetType AssetType
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  projectId String
+}
+
+enum AssetType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+  OTHER
 }

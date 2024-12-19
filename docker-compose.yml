@@ -8,6 +8,7 @@ services:
       - PORT=3000
       - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/lnd
       - SESSION_SECRET=${SESSION_SECRET}
+      - FILE_ROOT=/var/lib/bhd-server/files
     volumes:
       - server-data:/var/lib/bhd-server
     depends_on:

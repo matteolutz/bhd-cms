@@ -1,12 +1,12 @@
 import { ContentBlockBlueprint, Project, User } from "@prisma/client";
+import { z } from "zod";
 
 import { prisma } from "~/db.server";
-
-import { z } from "zod";
 
 export const ALL_BLUEPRINT_SCHEMA_VALUE_TYPES = [
   "array",
   "string",
+  "markdown",
   "number",
   "block",
   "blueprint-block",
@@ -17,10 +17,13 @@ export type ContentBlockBlueprintSchemaValueType =
 export type ContentBlockBlueprintSchemaValue =
   | {
       type: "array";
-      itemType: ContentBlockBlueprintSchemaValue;
+      itemType: ContentBlockBlueprintSchemaValue & { optional?: boolean };
     }
   | {
       type: "string";
+    }
+  | {
+      type: "markdown";
     }
   | {
       type: "number";
@@ -46,6 +49,8 @@ export const getDisplayNameForContentBlockBlueprintSchemaValue = (
     switch (value.type) {
       case "array":
         return `(${getDisplayNameForContentBlockBlueprintSchemaValue(value.itemType)})[]`;
+      case "markdown":
+        return "markdown";
       case "string":
         return "string";
       case "number":
@@ -74,6 +79,7 @@ const getZodSchemaForContentBlockBlueprintSchemaValue = (
           optional,
         ),
       );
+    case "markdown":
     case "string":
       return optional ? z.string().optional() : z.string();
     case "number":
@@ -108,6 +114,20 @@ export const getAllContentBlockBlueprintsForProjectAndUser = (
   prisma.contentBlockBlueprint.findMany({
     where: {
       projectId,
+      project: { userId },
+    },
+    include: {
+      project: { select: { userId: true } },
+    },
+  });
+
+export const deleteContentBlockBlueprintForProjectAndUser = (
+  id: ContentBlockBlueprint["id"],
+  userId: User["id"],
+) =>
+  prisma.contentBlockBlueprint.delete({
+    where: {
+      id,
       project: { userId },
     },
     include: {

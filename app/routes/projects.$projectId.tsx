@@ -99,6 +99,15 @@ const ProjectPageLayout = () => {
                     )}
                   </NavLink>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <NavLink to="assets">
+                    {({ isActive }) => (
+                      <SidebarMenuButton isActive={isActive}>
+                        <span>⛰</span> <span>Assets</span>
+                      </SidebarMenuButton>
+                    )}
+                  </NavLink>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

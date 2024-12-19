@@ -6,9 +6,9 @@ import {
   redirect,
 } from "@remix-run/node";
 import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
-import { ChevronLeft, Trash, Undo } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronUp, Trash } from "lucide-react";
 import { FC, useEffect, useState } from "react";
-import { array } from "zod";
+
 import { TypographyH3 } from "~/components/typography";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
@@ -22,6 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Textarea } from "~/components/ui/textarea";
 import {
   createContentBlock,
   getAllContentBlocksInProject,
@@ -168,12 +170,69 @@ const SchemaValueInputComponent: FC<{
             .sort(([a], [b]) => parseInt(a) - parseInt(b))
             .map(([, value]) => value),
         });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [localContent]);
 
       return (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 pl-2">
           {Object.keys(localContent)?.map((idx) => (
-            <div key={idx} className="flex gap-1">
+            <div key={idx} className="flex items-center gap-1">
+              <div className="flex flex-col">
+                <Button
+                  onClick={() => {
+                    // decrement index
+                    const values = Object.entries(localContent)
+                      .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                      .map(([, value]) => value);
+
+                    const currentIdx = values.indexOf(localContent[idx]);
+
+                    if (currentIdx == 0) return;
+
+                    const valueBelow = values[currentIdx - 1];
+                    values[currentIdx - 1] = localContent[currentIdx];
+                    values[currentIdx] = valueBelow;
+
+                    setLocalContent(
+                      Object.fromEntries(
+                        values.map((value, idx) => [idx, value]),
+                      ),
+                    );
+                  }}
+                  size="icon"
+                  variant="ghost"
+                  type="button"
+                >
+                  <ChevronUp />
+                </Button>
+                <Button
+                  onClick={() => {
+                    // increment index
+                    const values = Object.entries(localContent)
+                      .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                      .map(([, value]) => value);
+
+                    const currentIdx = values.indexOf(localContent[idx]);
+
+                    if (currentIdx == values.length - 1) return;
+
+                    const valueAbove = values[currentIdx + 1];
+                    values[currentIdx + 1] = localContent[currentIdx];
+                    values[currentIdx] = valueAbove;
+
+                    setLocalContent(
+                      Object.fromEntries(
+                        values.map((value, idx) => [idx, value]),
+                      ),
+                    );
+                  }}
+                  size="icon"
+                  variant="ghost"
+                  type="button"
+                >
+                  <ChevronDown />
+                </Button>
+              </div>
               <SchemaValueInputComponent
                 content={localContent}
                 setContent={setLocalContent}
@@ -227,6 +286,31 @@ const SchemaValueInputComponent: FC<{
         />
       );
     }
+    case "markdown":
+      return (
+        <Tabs defaultValue="editor">
+          <TabsList>
+            <TabsTrigger value="editor">Editor</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+          </TabsList>
+          <TabsContent value="editor">
+            <Textarea
+              rows={10}
+              className="resize-y"
+              value={(content[fieldName] as string) ?? ""}
+              onChange={(e) =>
+                setContent({
+                  ...content,
+                  [fieldName]: e.target.value,
+                })
+              }
+            />
+          </TabsContent>
+          <TabsContent value="preview">
+            <div>{(content[fieldName] as string) ?? ""}</div>
+          </TabsContent>
+        </Tabs>
+      );
     case "blueprint-block":
     case "block": {
       return (

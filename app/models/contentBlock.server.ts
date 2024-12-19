@@ -1,4 +1,4 @@
-import { ContentBlock, Project } from "@prisma/client";
+import { ContentBlock, Project, User } from "@prisma/client";
 
 import { prisma } from "~/db.server";
 
@@ -28,6 +28,22 @@ export const getAllContentBlocksInProject = (projectId: Project["id"]) =>
     include: {
       contentBlockBlueprint: {
         select: { projectId: true, tag: true, type: true, name: true },
+      },
+    },
+  });
+
+export const deleteContentBlockForUser = (
+  id: ContentBlock["id"],
+  userId: User["id"],
+) =>
+  prisma.contentBlock.delete({
+    where: {
+      id,
+      contentBlockBlueprint: { project: { userId } },
+    },
+    include: {
+      contentBlockBlueprint: {
+        include: { project: { select: { userId: true } } },
       },
     },
   });

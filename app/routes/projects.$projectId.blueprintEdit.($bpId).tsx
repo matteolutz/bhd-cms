@@ -1,4 +1,4 @@
-import { ContentBlockType } from "@prisma/client";
+import { ContentBlockBlueprint, ContentBlockType } from "@prisma/client";
 import {
   ActionFunctionArgs,
   LoaderFunctionArgs,
@@ -6,7 +6,7 @@ import {
 } from "@remix-run/node";
 import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import { ChevronLeft } from "lucide-react";
-import { useState } from "react";
+import { FC, useState } from "react";
 
 import { TypographyH3 } from "~/components/typography";
 import { Alert } from "~/components/ui/alert";
@@ -25,9 +25,9 @@ import {
   ALL_BLUEPRINT_SCHEMA_VALUE_TYPES,
   ContentBlockBlueprintSchema,
   ContentBlockBlueprintSchemaValue,
+  ContentBlockBlueprintSchemaValueType,
   createContentBlockBlueprint,
   getAllContentBlockBlueprintsForProjectAndUser,
-  getContentBlockBlueprintById,
   getContentBlockBlueprintByIdForProject,
   updateContentBlockBlueprint,
 } from "~/models/contentBlockBlueprint";
@@ -114,6 +114,123 @@ export const loader = async ({
   }
 
   return { contentBlockBlueprints, blueprint: null };
+};
+
+const EditSchemaEntryComponent: FC<{
+  setNewValueType: (valueType: ContentBlockBlueprintSchemaValueType) => void;
+  setOptional: (optional: boolean) => void;
+  setAttribute: (attribute: string, value: unknown) => void;
+  value: ContentBlockBlueprintSchemaValue & { optional?: boolean };
+  args: {
+    contentBlockBlueprints: Omit<
+      ContentBlockBlueprint,
+      "createdAt" | "updatedAt"
+    >[];
+  };
+}> = ({ value, setNewValueType, setOptional, setAttribute, args }) => {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-4">
+        <Select onValueChange={setNewValueType.bind(this)} value={value.type}>
+          <SelectTrigger>
+            <SelectValue placeholder="Choose a field type" />
+          </SelectTrigger>
+          <SelectContent>
+            {ALL_BLUEPRINT_SCHEMA_VALUE_TYPES.map((k) => (
+              <SelectItem key={k} value={k}>
+                {k}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="flex flex-col items-center gap-2">
+          <Label>Optional?</Label>
+          <Checkbox
+            onCheckedChange={setOptional.bind(this)}
+            checked={value.optional}
+          />
+        </div>
+      </div>
+      <div>
+        {(() => {
+          switch (value.type) {
+            case "blueprint-block":
+              return (
+                <Select
+                  onValueChange={(newBlueprint) =>
+                    setAttribute("blueprint", newBlueprint)
+                  }
+                  value={value.blueprint}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose Block Blueprint" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {args.contentBlockBlueprints.map((bp) => (
+                      <SelectItem key={bp.id} value={bp.id}>
+                        {bp.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              );
+            case "block":
+              return (
+                <Input
+                  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                  // @ts-expect-error
+                  value={value.tag}
+                  onChange={(e) => {
+                    if (e.target.value && e.target.value.trim() !== "")
+                      setAttribute("tag", e.target.value.trim());
+                  }}
+                  type="text"
+                  placeholder="Block Tag (optional)"
+                />
+              );
+            case "array":
+              return (
+                <div className="pl-2">
+                  <EditSchemaEntryComponent
+                    setOptional={(optional) =>
+                      setAttribute("itemType", {
+                        ...value.itemType,
+                        optional,
+                      })
+                    }
+                    setAttribute={(attribute, attributeValue) =>
+                      setAttribute("itemType", {
+                        ...value.itemType,
+                        [attribute]: attributeValue,
+                      })
+                    }
+                    setNewValueType={(newValueType) => {
+                      const newValue: Record<string, unknown> = {
+                        type: newValueType,
+                        optional: value.itemType.optional,
+                      };
+
+                      if (newValueType === "array") {
+                        newValue.itemType = {
+                          type: "string",
+                        };
+                      }
+
+                      setAttribute("itemType", newValue);
+                    }}
+                    value={value.itemType}
+                    args={args}
+                  />
+                </div>
+              );
+            default:
+              return null;
+          }
+        })()}
+      </div>
+    </div>
+  );
 };
 
 const ProjectPageBlueprintEdit = () => {
@@ -212,100 +329,44 @@ const ProjectPageBlueprintEdit = () => {
                 </Button>
               </div>
 
-              <div className="flex items-center gap-4">
-                <Select
-                  onValueChange={(newValueType) =>
-                    setSchema({
-                      ...schema,
-                      [name]: {
-                        ...value,
-                        type: newValueType,
-                      } as ContentBlockBlueprintSchemaValue,
-                    })
-                  }
-                  value={value.type}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a field type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ALL_BLUEPRINT_SCHEMA_VALUE_TYPES.map((k) => (
-                      <SelectItem key={k} value={k}>
-                        {k}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <EditSchemaEntryComponent
+                setNewValueType={(newValueType) => {
+                  const newValue: Record<string, unknown> = {
+                    type: newValueType,
+                    optional: value.optional,
+                  };
 
-                <div className="flex flex-col items-center gap-2">
-                  <Label>Optional?</Label>
-                  <Checkbox
-                    onCheckedChange={(checked) =>
-                      setSchema({
-                        ...schema,
-                        [name]: { ...value, optional: !!checked },
-                      })
-                    }
-                    checked={value.optional}
-                  />
-                </div>
-              </div>
-              <div>
-                {
-                  {
-                    "blueprint-block": (
-                      <Select
-                        onValueChange={(newBlueprint) =>
-                          setSchema({
-                            ...schema,
-                            [name]: {
-                              ...value,
-                              blueprint: newBlueprint,
-                            } as ContentBlockBlueprintSchemaValue,
-                          })
-                        }
-                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                        // @ts-expect-error
-                        value={value.blueprint}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose Block Blueprint" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {contentBlockBlueprints.map((bp) => (
-                            <SelectItem key={bp.id} value={bp.id}>
-                              {bp.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ),
-                    block: (
-                      <Input
-                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                        // @ts-expect-error
-                        value={value.tag}
-                        onChange={(e) =>
-                          setSchema({
-                            ...schema,
-                            [name]: {
-                              ...value,
-                              ...(e.target.value && e.target.value !== ""
-                                ? { tag: e.target.value }
-                                : {}),
-                            } as ContentBlockBlueprintSchemaValue,
-                          })
-                        }
-                        type="text"
-                        placeholder="Block Tag (optional)"
-                      />
-                    ),
-                    array: null,
-                    string: null,
-                    number: null,
-                  }[value.type]
+                  if (newValueType === "array") {
+                    newValue.itemType = {
+                      type: "string",
+                    };
+                  }
+
+                  setSchema({
+                    ...schema,
+                    [name]: newValue as ContentBlockBlueprintSchemaValue,
+                  });
+                }}
+                setOptional={(optional) =>
+                  setSchema({
+                    ...schema,
+                    [name]: { ...value, optional },
+                  })
                 }
-              </div>
+                setAttribute={(attribute, attributeValue) =>
+                  setSchema({
+                    ...schema,
+                    [name]: {
+                      ...value,
+                      [attribute]: attributeValue,
+                    } as ContentBlockBlueprintSchemaValue,
+                  })
+                }
+                args={{
+                  contentBlockBlueprints,
+                }}
+                value={value}
+              />
             </div>
           ))}
 
@@ -319,10 +380,11 @@ const ProjectPageBlueprintEdit = () => {
               type="button"
               variant="outline"
               onClick={() => {
-                if (newFieldInputValue in schema) return;
+                const newFieldName = newFieldInputValue.trim();
+                if (newFieldName === "" || newFieldName in schema) return;
                 setSchema({
                   ...schema,
-                  [newFieldInputValue]: {
+                  [newFieldName]: {
                     type: "string",
                     optional: false,
                   } as ContentBlockBlueprintSchemaValue & {

@@ -1,7 +1,23 @@
-import { LoaderFunctionArgs } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
-import { Edit } from "lucide-react";
-import { TypographyH3, TypographyH4 } from "~/components/typography";
+import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import { Link, useLoaderData, Form } from "@remix-run/react";
+import { Edit, Trash } from "lucide-react";
+
+import {
+  TypographyH3,
+  TypographyH4,
+  TypographyInlineCode,
+} from "~/components/typography";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
@@ -10,7 +26,10 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { getAllContentBlocksInProject } from "~/models/contentBlock.server";
+import {
+  deleteContentBlockForUser,
+  getAllContentBlocksInProject,
+} from "~/models/contentBlock.server";
 import { getProjectByIdForUserId } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
 import groupBy from "~/utils/group";
@@ -29,6 +48,23 @@ export const loader = async ({
 
   const blocks = await getAllContentBlocksInProject(project.id);
   return { blocks };
+};
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData();
+
+  switch (request.method) {
+    case "DELETE": {
+      const blockId = formData.get("blockId");
+
+      const userId = await requireUserId(request);
+
+      await deleteContentBlockForUser(blockId as string, userId);
+      break;
+    }
+  }
+
+  return null;
 };
 
 const ProjectPageBlocks = () => {
@@ -61,6 +97,40 @@ const ProjectPageBlocks = () => {
                             <Edit />
                           </Link>
                         </Button>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" type="button">
+                              <Trash />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Delete Content-Block{" "}
+                                <TypographyInlineCode>
+                                  {block.name}
+                                </TypographyInlineCode>
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action is permanent and cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <Form method="DELETE">
+                                <input
+                                  type="hidden"
+                                  name="blockId"
+                                  value={block.id}
+                                />
+                                <AlertDialogAction type="submit">
+                                  Delete
+                                </AlertDialogAction>
+                              </Form>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </CardDescription>
                   </CardHeader>
