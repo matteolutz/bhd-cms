@@ -13,7 +13,7 @@
     "format": "prettier --write .",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "setup": "prisma generate && prisma migrate deploy && prisma db seed",
-    "start": "prisma generate && primsa migrate deploy && cross-env NODE_ENV=production node ./build/server.js",
+    "start": "npx prisma generate && npx primsa migrate deploy && cross-env NODE_ENV=production node ./build/server.js",
     "start:mocks": "cross-env NODE_ENV=production node --require ./mocks --require dotenv/config ./build/server.js",
     "test": "vitest",
     "typecheck": "tsc",
