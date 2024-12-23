@@ -13,7 +13,7 @@ export const loader = async ({
   request,
   params: { id },
 }: LoaderFunctionArgs) => {
-  const project = await requireProjectAccessToken(request);
+  const project = await requireProjectAccessToken(request, true);
 
   invariantFieldRequired(id, "id");
 

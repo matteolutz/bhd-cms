@@ -11,8 +11,17 @@ import { createReadableStreamFromReadable } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
+import { cleanAssets } from "./models/asset.server";
 
 const ABORT_DELAY = 5_000;
+
+(async () => {
+  console.log("[BHD] Cleaning assets...");
+  const numCleanedAssets = await cleanAssets();
+  if (numCleanedAssets > 0)
+    console.log(`[BHD] Cleaned ${numCleanedAssets} assets.`);
+  else console.log("[BHD] No assets to clean.");
+})();
 
 export default function handleRequest(
   request: Request,

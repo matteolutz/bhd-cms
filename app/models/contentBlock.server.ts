@@ -52,6 +52,7 @@ export const updateContentBlock = (
   id: ContentBlock["id"],
   name: ContentBlock["name"],
   contentBlockBlueprintId: ContentBlock["contentBlockBlueprintId"],
+  tag: ContentBlock["tag"],
   content: ContentBlock["content"],
 ) =>
   prisma.contentBlock.update({
@@ -59,6 +60,7 @@ export const updateContentBlock = (
     data: {
       name,
       contentBlockBlueprintId,
+      tag,
       content: content ?? {},
     },
   });
@@ -66,12 +68,14 @@ export const updateContentBlock = (
 export const createContentBlock = (
   name: ContentBlock["name"],
   contentBlockBlueprintId: ContentBlock["contentBlockBlueprintId"],
+  tag: ContentBlock["tag"],
   content: ContentBlock["content"],
 ) =>
   prisma.contentBlock.create({
     data: {
       name,
       contentBlockBlueprintId,
+      tag,
       content: content ?? {},
     },
   });

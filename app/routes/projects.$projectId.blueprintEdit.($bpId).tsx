@@ -54,7 +54,10 @@ export const action = async ({
   const formData = await request.formData();
 
   const blueprintName = formData.get("name") as string;
-  const blueprintTag = formData.get("tag") as string;
+
+  let blueprintTag = (formData.get("tag") as string | null)?.trim() ?? null;
+  blueprintTag = blueprintTag === "" ? null : blueprintTag;
+
   const blueprintType = formData.get("type") as ContentBlockType;
   const blueprintFields = JSON.parse(formData.get("schema") as string);
 
@@ -80,14 +83,14 @@ export const action = async ({
       blueprint.id,
       blueprintName,
       blueprintType,
-      !blueprintTag || blueprintTag === "" ? null : blueprintTag,
+      blueprintTag,
       blueprintFields,
     );
   } else {
     await createContentBlockBlueprint(
       blueprintName,
       blueprintType,
-      !blueprintTag || blueprintTag === "" ? null : blueprintTag,
+      blueprintTag,
       blueprintFields,
       project.id,
     );
@@ -279,6 +282,7 @@ const ProjectPageBlueprintEdit = () => {
             id="inputName"
             name="name"
             type="text"
+            required
           />
         </div>
 
@@ -299,6 +303,7 @@ const ProjectPageBlueprintEdit = () => {
             value={blueprintType}
             onValueChange={setBlueprintType}
             name="type"
+            required
           >
             <SelectTrigger id="selectType">
               <SelectValue placeholder="Choose a blueprint type" />

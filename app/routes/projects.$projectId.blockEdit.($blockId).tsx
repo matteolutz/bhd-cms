@@ -61,13 +61,16 @@ export const action = async ({
 
   const formData = await request.formData();
 
-  const blockName = formData.get("name") as string;
-  const blockBlueprintId = formData.get("blueprint") as string;
+  const blockName = formData.get("name") as string | null;
+  const blockBlueprintId = formData.get("blueprint") as string | null;
   const blockContent = JSON.parse(formData.get("content") as string);
+
+  let blockTag = (formData.get("tag") as string | null)?.trim() ?? null;
+  blockTag = blockTag === "" ? null : blockTag;
 
   if (
     !blockName ||
-    blockName === "" ||
+    blockName.trim() === "" ||
     !blockBlueprintId ||
     blockBlueprintId === ""
   ) {
@@ -100,10 +103,16 @@ export const action = async ({
       block.id,
       blockName,
       blockBlueprint.id,
+      blockTag,
       zodOutput.data,
     );
   } else {
-    await createContentBlock(blockName, blockBlueprint.id, zodOutput.data);
+    await createContentBlock(
+      blockName,
+      blockBlueprint.id,
+      blockTag,
+      zodOutput.data,
+    );
   }
 
   return redirect("../blocks");
@@ -126,17 +135,12 @@ export const loader = async ({
 
   const contentBlocks = await getAllContentBlocksInProject(project.id);
 
+  let block = null;
   if (blockId) {
-    const block = await getContentBlockByIdForProject(blockId, project.id);
-
-    return {
-      blueprints,
-      contentBlocks,
-      block,
-    };
+    block = await getContentBlockByIdForProject(blockId, project.id);
   }
 
-  return { blueprints, contentBlocks, block: null };
+  return { blueprints, contentBlocks, block };
 };
 
 const SchemaValueInputComponent: FC<{
@@ -352,11 +356,13 @@ const ProjectPageEditBlock = () => {
   const { blueprints, contentBlocks, block } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
-  const [blockName, setBlockName] = useState<string>(block ? block.name : "");
+  const [blockName, setBlockName] = useState<string>(block?.name ?? "");
 
   const [selectedBlueprint, setSelectedBlueprint] = useState<
     ContentBlockBlueprint["id"] | null
   >(block ? block.contentBlockBlueprintId : null);
+
+  const [blockTag, setBlockTag] = useState<string>(block?.tag ?? "");
 
   const getBlueprint = (id: ContentBlockBlueprint["id"]) =>
     blueprints.find((b) => b.id === id);
@@ -394,6 +400,7 @@ const ProjectPageEditBlock = () => {
             id="inputName"
             name="name"
             type="text"
+            required
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -402,6 +409,7 @@ const ProjectPageEditBlock = () => {
             value={selectedBlueprint ?? undefined}
             onValueChange={setSelectedBlueprint}
             name="blueprint"
+            required
           >
             <SelectTrigger id="selectBlueprint">
               <SelectValue placeholder="Choose a blueprint" />
@@ -421,6 +429,17 @@ const ProjectPageEditBlock = () => {
               )}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="inputTag">Tag (optional)</Label>
+          <Input
+            value={blockTag}
+            onChange={(e) => setBlockTag(e.target.value)}
+            id="inputTag"
+            name="tag"
+            type="text"
+          />
         </div>
 
         {/* eslint-disable-next-line react/jsx-no-leaked-render */}

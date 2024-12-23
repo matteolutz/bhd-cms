@@ -74,6 +74,10 @@ const ProjectPageBlocks = () => {
     <div className="flex flex-col gap-2">
       <TypographyH3 className="mt-0">Content Blocks</TypographyH3>
 
+      <Button variant="outline" asChild>
+        <Link to="../blockEdit">New Content Block</Link>
+      </Button>
+
       <div className="flex flex-col gap-4 divide-y py-4">
         {Array.from(
           groupBy(blocks, (b) => b.contentBlockBlueprint.type).entries(),
@@ -139,10 +143,6 @@ const ProjectPageBlocks = () => {
             </div>
           ))}
       </div>
-
-      <Button variant="link" asChild>
-        <Link to="../blockEdit">New Content Block</Link>
-      </Button>
     </div>
   );
 };

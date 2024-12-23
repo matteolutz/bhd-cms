@@ -75,6 +75,11 @@ const ProjectPageBlueprints = () => {
   return (
     <div className="flex flex-col gap-2">
       <TypographyH3 className="mt-0">Blueprints</TypographyH3>
+
+      <Button variant="outline" asChild>
+        <Link to="../blueprintEdit">New Blueprint</Link>
+      </Button>
+
       <div className="flex flex-col gap-4 divide-y py-4">
         {Array.from(groupBy(blueprints, (b) => b.type).entries())
           .sort(([a], [b]) => a.localeCompare(b))
@@ -85,7 +90,53 @@ const ProjectPageBlueprints = () => {
                 <Card id={blueprint.id} key={blueprint.id}>
                   <CardHeader className="p-4">
                     <CardTitle>{blueprint.name}</CardTitle>
-                    <CardDescription>{blueprint.id}</CardDescription>
+                    <CardDescription className="flex items-center justify-between">
+                      <span>{blueprint.id}</span>
+
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link to={`../blueprintEdit/${blueprint.id}`}>
+                            <Edit />
+                          </Link>
+                        </Button>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" type="button">
+                              <Trash />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Delete Blueprint{" "}
+                                <TypographyInlineCode>
+                                  {blueprint.name}
+                                </TypographyInlineCode>
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action is permanent and cannot be undone.
+                                All Content-Blocks to this Blueprint will also
+                                be deleted!
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <Form method="DELETE">
+                                <input
+                                  type="hidden"
+                                  name="blueprintId"
+                                  value={blueprint.id}
+                                />
+                                <AlertDialogAction type="submit">
+                                  Delete
+                                </AlertDialogAction>
+                              </Form>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="flex items-center justify-between">
                     <div className="flex flex-col gap-2">
@@ -103,8 +154,9 @@ const ProjectPageBlueprints = () => {
                                 string: "blue",
                                 number: "red",
                                 array: "green",
-                                block: "yellow",
+                                block: "blueviolet",
                                 "blueprint-block": "purple",
+                                markdown: "black",
                               }[valueType.type],
                             }}
                           >
@@ -115,59 +167,12 @@ const ProjectPageBlueprints = () => {
                         </div>
                       ))}
                     </div>
-
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link to={`../blueprintEdit/${blueprint.id}`}>
-                          <Edit />
-                        </Link>
-                      </Button>
-
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" type="button">
-                            <Trash />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Delete Blueprint{" "}
-                              <TypographyInlineCode>
-                                {blueprint.name}
-                              </TypographyInlineCode>
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action is permanent and cannot be undone. All
-                              Content-Blocks to this Blueprint will also be
-                              deleted!
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <Form method="DELETE">
-                              <input
-                                type="hidden"
-                                name="blueprintId"
-                                value={blueprint.id}
-                              />
-                              <AlertDialogAction type="submit">
-                                Delete
-                              </AlertDialogAction>
-                            </Form>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           ))}
       </div>
-      <Button variant="link" asChild>
-        <Link to="../blueprintEdit">New Blueprint</Link>
-      </Button>
     </div>
   );
 };
