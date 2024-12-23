@@ -12,6 +12,7 @@ import {
 
 import { getUser } from "~/session.server";
 import stylesheet from "~/styles/tailwind.css";
+
 import { GlobalLoading } from "./components/loader";
 
 export const links: LinksFunction = () => [

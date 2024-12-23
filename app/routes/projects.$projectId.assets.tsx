@@ -1,16 +1,8 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Form, Link, useLoaderData } from "@remix-run/react";
+import { Edit, Trash } from "lucide-react";
 
 import { TypographyH3, TypographyInlineCode } from "~/components/typography";
-import { Button } from "~/components/ui/button";
-import {
-  deleteAssetByIdForProjectAndUser,
-  getAllAssetsForProject,
-} from "~/models/asset.server";
-import { getProjectByIdForUserId } from "~/models/project.server";
-import { requireUserId } from "~/session.server";
-import { invariantFieldRequired } from "~/utils/invariant";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,13 +15,21 @@ import {
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
 import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Edit, Trash } from "lucide-react";
+import {
+  deleteAssetByIdForProjectAndUser,
+  getAllAssetsForProject,
+} from "~/models/asset.server";
+import { getProjectByIdForUserId } from "~/models/project.server";
+import { requireUserId } from "~/session.server";
+import { invariantFieldRequired } from "~/utils/invariant";
+
 
 export const loader = async ({
   request,

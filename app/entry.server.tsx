@@ -4,6 +4,7 @@
  * For more information, see https://remix.run/docs/en/main/file-conventions/entry.server
  */
 
+import * as fs from "fs/promises";
 import { PassThrough } from "node:stream";
 
 import type { EntryContext } from "@remix-run/node";
@@ -11,11 +12,18 @@ import { createReadableStreamFromReadable } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
-import { cleanAssets } from "./models/asset.server";
+
+import { ASSET_FILE_ROOT, cleanAssets } from "./models/asset.server";
+
 
 const ABORT_DELAY = 5_000;
 
 (async () => {
+  console.log("[BHD] Creating dirs...");
+
+  await fs.mkdir(process.env.FILE_ROOT as string, { recursive: true });
+  await fs.mkdir(ASSET_FILE_ROOT, { recursive: true });
+
   console.log("[BHD] Cleaning assets...");
   const numCleanedAssets = await cleanAssets();
   if (numCleanedAssets > 0)

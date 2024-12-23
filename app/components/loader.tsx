@@ -1,5 +1,6 @@
 import { useNavigation } from "@remix-run/react";
 import { FC, useEffect, useRef, useState } from "react";
+
 import { cn } from "~/lib/utils";
 
 const LoadingSpinner: FC<{ className?: string }> = ({ className }) => {

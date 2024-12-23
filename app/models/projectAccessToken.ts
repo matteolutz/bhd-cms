@@ -4,7 +4,6 @@ import { prisma } from "~/db.server";
 import { invariantFieldRequired } from "~/utils/invariant";
 
 import { getProjectById, Project } from "./project.server";
-import { Params } from "@remix-run/react";
 
 export const getProjectIdFromAccessToken = async (
   token: ProjectAccessToken["token"],
