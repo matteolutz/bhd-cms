@@ -1,4 +1,10 @@
-import { ContentBlockBlueprint, Project, User } from "@prisma/client";
+import {
+  Asset,
+  AssetType,
+  ContentBlockBlueprint,
+  Project,
+  User,
+} from "@prisma/client";
 import { z } from "zod";
 
 import { prisma } from "~/db.server";
@@ -10,6 +16,7 @@ export const ALL_BLUEPRINT_SCHEMA_VALUE_TYPES = [
   "number",
   "block",
   "blueprint-block",
+  "asset",
 ] as const;
 export type ContentBlockBlueprintSchemaValueType =
   (typeof ALL_BLUEPRINT_SCHEMA_VALUE_TYPES)[number];
@@ -35,6 +42,10 @@ export type ContentBlockBlueprintSchemaValue =
   | {
       type: "blueprint-block";
       blueprint: ContentBlockBlueprint["id"];
+    }
+  | {
+      type: "asset";
+      assetTypes: Asset["assetType"][];
     };
 
 export type ContentBlockBlueprintSchema = Record<
@@ -59,6 +70,8 @@ export const getDisplayNameForContentBlockBlueprintSchemaValue = (
         return value.tag ? `block (tag: ${value.tag})` : "block";
       case "blueprint-block":
         return `blueprint-block (${value.blueprint})`;
+      case "asset":
+        return `asset (${value.assetTypes.join(", ")})`;
     }
   })();
 
@@ -85,9 +98,11 @@ const getZodSchemaForContentBlockBlueprintSchemaValue = (
     case "number":
       return optional ? z.number().optional() : z.number();
     case "block":
-      return optional ? z.string().optional() : z.string();
+      return optional ? z.string().optional() : z.string(); // block tag
     case "blueprint-block":
-      return optional ? z.string().optional() : z.string();
+      return optional ? z.string().optional() : z.string(); // blueprint id
+    case "asset":
+      return optional ? z.string().optional() : z.string(); // asset id
   }
 };
 

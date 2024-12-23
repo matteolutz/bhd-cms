@@ -5,5 +5,7 @@ type Entries<T> = {
 declare global {
   interface ObjectConstructor {
     entries<T extends object>(o: T): Entries<T>;
+    keys<T extends object>(o: T): (keyof T)[];
+    values<T extends object>(o: T): T[keyof T][];
   }
 }

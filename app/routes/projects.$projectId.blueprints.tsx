@@ -90,8 +90,16 @@ const ProjectPageBlueprints = () => {
                 <Card id={blueprint.id} key={blueprint.id}>
                   <CardHeader className="p-4">
                     <CardTitle>{blueprint.name}</CardTitle>
-                    <CardDescription className="flex items-center justify-between">
-                      <span>{blueprint.id}</span>
+                    <CardDescription className="flex justify-between">
+                      <div className="flex flex-col">
+                        <span>{blueprint.id}</span>
+                        {blueprint.tag ? (
+                          <span>
+                            <strong>Tag: </strong>
+                            {blueprint.tag}
+                          </span>
+                        ) : null}
+                      </div>
 
                       <div className="flex items-center gap-1">
                         <Button variant="ghost" size="icon" asChild>

@@ -30,7 +30,6 @@ import { getProjectByIdForUserId } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
 import { invariantFieldRequired } from "~/utils/invariant";
 
-
 export const loader = async ({
   request,
   params: { projectId },
@@ -80,8 +79,9 @@ const ProjectPageAssets = () => {
             <CardHeader className="p-4">
               <CardTitle>{asset.name}</CardTitle>
               <CardDescription className="flex items-center justify-between">
-                <div className="flex gap-1">
-                  <Badge>{asset.mimeType}</Badge>
+                <div className="flex items-center gap-1">
+                  <Badge className="h-min">{asset.mimeType}</Badge>
+                  <Badge className="h-min">{asset.assetType}</Badge>
                   <Button variant="link" asChild>
                     <Link
                       target="_blank"
@@ -109,7 +109,7 @@ const ProjectPageAssets = () => {
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>
-                          Delete Content-Block{" "}
+                          Delete Asset{" "}
                           <TypographyInlineCode>
                             {asset.name}
                           </TypographyInlineCode>

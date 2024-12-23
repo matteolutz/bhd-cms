@@ -1,4 +1,4 @@
-import { ContentBlock, ContentBlockBlueprint } from "@prisma/client";
+import { Asset, ContentBlock, ContentBlockBlueprint } from "@prisma/client";
 import { Select } from "@radix-ui/react-select";
 import {
   ActionFunctionArgs,
@@ -24,6 +24,7 @@ import {
 } from "~/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Textarea } from "~/components/ui/textarea";
+import { getAllAssetsForProject } from "~/models/asset.server";
 import {
   createContentBlock,
   getAllContentBlocksInProject,
@@ -135,12 +136,14 @@ export const loader = async ({
 
   const contentBlocks = await getAllContentBlocksInProject(project.id);
 
+  const assets = await getAllAssetsForProject(project.id);
+
   let block = null;
   if (blockId) {
     block = await getContentBlockByIdForProject(blockId, project.id);
   }
 
-  return { blueprints, contentBlocks, block };
+  return { blueprints, contentBlocks, block, assets };
 };
 
 const SchemaValueInputComponent: FC<{
@@ -148,13 +151,16 @@ const SchemaValueInputComponent: FC<{
   schemaValue: ContentBlockBlueprintSchemaValue;
   content: Record<string, unknown>;
   setContent: (value: Record<string, unknown>) => void;
-  contentBlocks: Omit<
-    ContentBlock & {
-      contentBlockBlueprint: { tag: string | null };
-    },
-    "createdAt" | "updatedAt"
-  >[];
-}> = ({ fieldName, schemaValue, content, setContent, contentBlocks }) => {
+  data: {
+    contentBlocks: Omit<
+      ContentBlock & {
+        contentBlockBlueprint: { tag: string | null };
+      },
+      "createdAt" | "updatedAt"
+    >[];
+    assets: Omit<Asset, "createdAt" | "updatedAt">[];
+  };
+}> = ({ fieldName, schemaValue, content, setContent, data }) => {
   switch (schemaValue.type) {
     case "array": {
       const contentArray = content[fieldName] as unknown[];
@@ -240,7 +246,7 @@ const SchemaValueInputComponent: FC<{
               <SchemaValueInputComponent
                 content={localContent}
                 setContent={setLocalContent}
-                contentBlocks={contentBlocks}
+                data={data}
                 fieldName={"" + idx}
                 schemaValue={schemaValue.itemType}
               />
@@ -315,6 +321,33 @@ const SchemaValueInputComponent: FC<{
           </TabsContent>
         </Tabs>
       );
+    case "asset":
+      return (
+        <Select
+          onValueChange={(newValue) =>
+            setContent({
+              ...content,
+              [fieldName]: newValue,
+            })
+          }
+          value={(content[fieldName] as string) ?? ""}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Choose an Asset" />
+          </SelectTrigger>
+          <SelectContent>
+            {data.assets
+              .filter((asset) =>
+                schemaValue.assetTypes.includes(asset.assetType),
+              )
+              .map((asset) => (
+                <SelectItem key={asset.id} value={asset.id}>
+                  {asset.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+      );
     case "blueprint-block":
     case "block": {
       return (
@@ -331,7 +364,7 @@ const SchemaValueInputComponent: FC<{
             <SelectValue placeholder="Choose a block" />
           </SelectTrigger>
           <SelectContent>
-            {contentBlocks
+            {data.contentBlocks
               .filter(
                 (block) =>
                   (schemaValue.type === "block" &&
@@ -353,7 +386,8 @@ const SchemaValueInputComponent: FC<{
 };
 
 const ProjectPageEditBlock = () => {
-  const { blueprints, contentBlocks, block } = useLoaderData<typeof loader>();
+  const { blueprints, contentBlocks, block, assets } =
+    useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
   const [blockName, setBlockName] = useState<string>(block?.name ?? "");
@@ -458,7 +492,7 @@ const ProjectPageEditBlock = () => {
                     schemaValue={fieldValue}
                     content={content}
                     setContent={setContent}
-                    contentBlocks={contentBlocks}
+                    data={{ contentBlocks, assets }}
                   />
                 </div>
               </div>

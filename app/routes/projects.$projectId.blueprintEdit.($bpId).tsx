@@ -1,4 +1,8 @@
-import { ContentBlockBlueprint, ContentBlockType } from "@prisma/client";
+import {
+  AssetType,
+  ContentBlockBlueprint,
+  ContentBlockType,
+} from "@prisma/client";
 import {
   ActionFunctionArgs,
   LoaderFunctionArgs,
@@ -8,7 +12,7 @@ import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import { ChevronLeft } from "lucide-react";
 import { FC, useState } from "react";
 
-import { TypographyH3 } from "~/components/typography";
+import { TypographyH3, TypographyInlineCode } from "~/components/typography";
 import { Alert } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -33,6 +37,7 @@ import {
 } from "~/models/contentBlockBlueprint";
 import { getProjectByIdForUserId } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
+import { arrayWithout, uniqueArray } from "~/utils/array";
 import { invariantFieldRequired } from "~/utils/invariant";
 import omit from "~/utils/omit";
 
@@ -225,6 +230,46 @@ const EditSchemaEntryComponent: FC<{
                     value={value.itemType}
                     args={args}
                   />
+                </div>
+              );
+            case "asset":
+              return (
+                <div className="flex justify-evenly p-2">
+                  {Object.values(AssetType).map((assetType) => (
+                    <div
+                      key={assetType}
+                      className="flex flex-col items-center justify-center"
+                    >
+                      <Checkbox
+                        checked={value.assetTypes?.includes(assetType) ?? false}
+                        onCheckedChange={(checked) =>
+                          setAttribute(
+                            "assetTypes",
+                            !checked
+                              ? arrayWithout(value.assetTypes ?? [], assetType)
+                              : uniqueArray(
+                                  ...(value.assetTypes ?? []),
+                                  assetType,
+                                ),
+                          )
+                        }
+                      />
+                      <TypographyInlineCode className="text-xs">
+                        {assetType}
+                      </TypographyInlineCode>
+                    </div>
+                  ))}
+
+                  <Button
+                    onClick={() =>
+                      setAttribute("assetTypes", Object.values(AssetType))
+                    }
+                    type="button"
+                    variant="outline"
+                    className="text-xs"
+                  >
+                    Select All
+                  </Button>
                 </div>
               );
             default:
