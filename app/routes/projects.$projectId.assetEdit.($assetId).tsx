@@ -51,10 +51,15 @@ export const action = async ({
     unstable_createMemoryUploadHandler(),
   );
 
-  const formData = await unstable_parseMultipartFormData(
-    request,
-    fileUploadHandler,
-  );
+  let formData;
+  try {
+    formData = await unstable_parseMultipartFormData(
+      request,
+      fileUploadHandler,
+    );
+  } catch (e) {
+    return { status: "error", reason: "Failed to parse form data: " + e };
+  }
 
   const assetName = formData.get("name") as string | null;
 
@@ -72,17 +77,26 @@ export const action = async ({
     const asset = await getAssetByIdForProject(assetId, project.id);
     if (!asset) return { status: "error", reason: "Asset not found." };
 
-    await updateAsset(asset.id, assetName, assetTag);
+    try {
+      await updateAsset(asset.id, assetName, assetTag);
+    } catch (e) {
+      return { status: "error", reason: "Failed to update Asset: " + e };
+    }
+
     return redirect("../assets");
   }
 
-  await createAsset(
-    assetName,
-    assetTag,
-    assetFile!.name,
-    assetFile!.type,
-    project.id,
-  );
+  try {
+    await createAsset(
+      assetName,
+      assetTag,
+      assetFile!.name,
+      assetFile!.type,
+      project.id,
+    );
+  } catch (e) {
+    return { status: "error", reason: "Failed to created Asset: " + e };
+  }
 
   return redirect("../assets");
 };
