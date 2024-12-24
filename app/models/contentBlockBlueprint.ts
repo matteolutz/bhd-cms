@@ -1,10 +1,4 @@
-import {
-  Asset,
-  AssetType,
-  ContentBlockBlueprint,
-  Project,
-  User,
-} from "@prisma/client";
+import { Asset, ContentBlockBlueprint, Project, User } from "@prisma/client";
 import { z } from "zod";
 
 import { prisma } from "~/db.server";

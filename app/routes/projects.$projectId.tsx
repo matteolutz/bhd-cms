@@ -78,6 +78,22 @@ const ProjectPageLayout = () => {
             </SidebarGroupContent>
           </SidebarGroup>
           <SidebarGroup>
+            <SidebarGroupLabel>Tools</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <NavLink to="live">
+                    {({ isActive }) => (
+                      <SidebarMenuButton isActive={isActive}>
+                        <span>⚡️</span> <span>Live-Edit</span>
+                      </SidebarMenuButton>
+                    )}
+                  </NavLink>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
             <SidebarGroupLabel>Content</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
