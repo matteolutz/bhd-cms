@@ -1,23 +1,64 @@
-import { useRef } from "react";
+import { ContentBlock } from "@prisma/client";
+import { ActionFunctionArgs } from "@remix-run/node";
+import { useFetcher } from "@remix-run/react";
+import { useEffect, useRef } from "react";
 
 import { TypographyH3 } from "~/components/typography";
 import { Button } from "~/components/ui/button";
+import { requireUserId } from "~/session.server";
+import { invariantFieldRequired } from "~/utils/invariant";
+
+export const action = async ({
+  request,
+  params: { projectId },
+}: ActionFunctionArgs) => {
+  invariantFieldRequired(projectId, "projectId");
+  const userId = await requireUserId(request);
+
+  const formData = await request.formData();
+  console.log(formData.get("dirtyFields"));
+
+  return {};
+};
 
 const ProjectPageLive = () => {
   const url = "http://localhost:5173";
 
+  const fetcher = useFetcher<typeof action>();
+
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    const listener = (e: MessageEvent) => {
+      if (!e || !("bhd" in e.data)) return;
+
+      switch (e.data.type) {
+        case "bhd-live-edit-save-result": {
+          const dirtyFields: Record<
+            ContentBlock["id"],
+            Record<string, unknown>
+          > = e.data.dirtyFields;
+
+          const clientFormData = new FormData();
+          clientFormData.append("dirtyFields", JSON.stringify(dirtyFields));
+
+          fetcher.submit(clientFormData, { method: "POST" });
+        }
+      }
+    };
+
+    window.addEventListener("message", listener);
+
+    return () => {
+      window.removeEventListener("message", listener);
+    };
+  }, []);
 
   const onIframeLoad = () => {
     if (!iframeRef.current || !iframeRef.current.contentWindow) return;
     const iframeWindow = iframeRef.current.contentWindow;
 
-    console.log("sending message");
     iframeWindow.postMessage({ bhd: true, type: "bhd-live-edit" }, "*");
-    window.addEventListener(
-      "message",
-      (e) => "bhd" in e.data && console.log(e.data),
-    );
   };
 
   return (
@@ -32,7 +73,6 @@ const ProjectPageLive = () => {
       />
       <Button
         onClick={() => {
-          console.log("sending");
           iframeRef.current?.contentWindow?.postMessage(
             { bhd: true, type: "bhd-live-edit-save" },
             "*",
