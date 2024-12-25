@@ -5,6 +5,8 @@ import { useEffect, useRef } from "react";
 
 import { TypographyH3 } from "~/components/typography";
 import { Button } from "~/components/ui/button";
+import { updateBlockContentForProjectId } from "~/models/contentBlock.server";
+import { getProjectByIdForUserId } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
 import { invariantFieldRequired } from "~/utils/invariant";
 
@@ -12,13 +14,37 @@ export const action = async ({
   request,
   params: { projectId },
 }: ActionFunctionArgs) => {
-  invariantFieldRequired(projectId, "projectId");
-  const userId = await requireUserId(request);
+  if (!projectId) {
+    return { success: false, error: "Project id is required." };
+  }
+
+  let userId;
+  try {
+    userId = await requireUserId(request);
+  } catch (e) {
+    return { success: false, error: "" + e };
+  }
+
+  const project = await getProjectByIdForUserId(projectId, userId);
+  if (!project) {
+    return { success: false, error: "Project not found." };
+  }
 
   const formData = await request.formData();
-  console.log(formData.get("dirtyFields"));
+  const dirtyFields: Record<
+    ContentBlock["id"],
+    Record<string, string>
+  > = JSON.parse(formData.get("dirtyFields") as string);
 
-  return {};
+  for (const blockId in dirtyFields) {
+    await updateBlockContentForProjectId(
+      blockId,
+      project.id,
+      dirtyFields[blockId],
+    );
+  }
+
+  return { success: true, error: null };
 };
 
 const ProjectPageLive = () => {
@@ -29,20 +55,24 @@ const ProjectPageLive = () => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
+    if (!fetcher.data || !fetcher.data.success) return;
+    iframeRef.current?.contentWindow?.postMessage(
+      { bhd: true, type: "bhd-live-edit-reload" },
+      "*",
+    );
+  }, [fetcher.data]);
+
+  useEffect(() => {
     const listener = (e: MessageEvent) => {
       if (!e || !("bhd" in e.data)) return;
 
       switch (e.data.type) {
         case "bhd-live-edit-save-result": {
-          const dirtyFields: Record<
-            ContentBlock["id"],
-            Record<string, unknown>
-          > = e.data.dirtyFields;
-
-          const clientFormData = new FormData();
-          clientFormData.append("dirtyFields", JSON.stringify(dirtyFields));
-
-          fetcher.submit(clientFormData, { method: "POST" });
+          fetcher.submit(
+            { dirtyFields: JSON.stringify(e.data.dirtyFields) },
+            { method: "POST" },
+          );
+          break;
         }
       }
     };

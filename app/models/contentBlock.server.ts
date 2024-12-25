@@ -79,3 +79,16 @@ export const createContentBlock = (
       content: content ?? {},
     },
   });
+
+export const updateBlockContentForProjectId = async (
+  id: ContentBlock["id"],
+  projectId: Project["id"],
+  content: Partial<ContentBlock["content"]>,
+) => {
+  const block = await getContentBlockByIdForProject(id, projectId);
+  if (!block) throw new Error("Block not found.");
+  await prisma.contentBlock.update({
+    where: { id: block.id },
+    data: { content: { ...(block.content as object), ...(content as object) } },
+  });
+};
