@@ -49,7 +49,7 @@ export const action = async ({
     return { success: false, saved: null, error: "Project not found." };
   }
 
-  if (!(project.settings as ProjectSettings).liveEdit.enabled)
+  if (!(project.settings as unknown as ProjectSettings).liveEdit.enabled)
     return {
       success: false,
       saved: null,
@@ -130,7 +130,7 @@ const ProjectPageLive = () => {
     iframeWindow.postMessage({ bhd: true, type: "bhd-live-edit" }, "*");
   };
 
-  const projectSettings = project.settings as ProjectSettings;
+  const projectSettings = project.settings as unknown as ProjectSettings;
 
   return (
     <div className="flex size-full flex-col gap-2">
