@@ -14,6 +14,7 @@ import { getUser } from "~/session.server";
 import stylesheet from "~/styles/tailwind.css";
 
 import { GlobalLoading } from "./components/loader";
+import { Toaster } from "./components/ui/toaster";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
@@ -36,6 +37,7 @@ export default function App() {
       <body className="h-full">
         <GlobalLoading />
         <Outlet />
+        <Toaster />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

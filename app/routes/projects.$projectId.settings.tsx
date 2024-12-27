@@ -1,6 +1,7 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 
+import BetaBadge from "~/components/betaBadge";
 import {
   TypographyH3,
   TypographyH4,
@@ -8,24 +9,39 @@ import {
   TypographyP,
 } from "~/components/typography";
 import { Button } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
 import {
   createProjectAccessToken,
   deleteProjectAccessToken,
-  getProjectAccessToken,
+  getProjectAccessTokenForUserId,
   getProjectByIdForUserId,
+  ProjectSettings,
+  updateProjectSettings,
 } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
 
 const INTENT_GENERATE_ACCESS = "GENERATE_ACCESS";
 const INTENT_DELETE_ACCESS = "DELETE_ACCESS";
+const INTENT_ENABLE_LIVE_EDIT = "ENABLE_LIVE_EDIT";
+const INTENT_DISABLE_LIVE_EDIT = "DISABLE_LIVE_EDIT";
+const INTENT_UPDATE_LIVE_EDIT_URL = "UPDATE_LIVE_EDIT_URL";
 
 export const loader = async ({
   request,
   params: { projectId },
 }: LoaderFunctionArgs) => {
   const userId = await requireUserId(request);
-  const accessToken = await getProjectAccessToken(projectId ?? "", userId);
-  return { accessToken };
+  const projectAndAccesToken = await getProjectAccessTokenForUserId(
+    projectId ?? "",
+    userId,
+  );
+
+  if (!projectAndAccesToken) throw new Error("Project not found!");
+
+  const [project, accessToken] = projectAndAccesToken;
+
+  return { project, accessToken };
 };
 
 export const action = async ({
@@ -39,6 +55,8 @@ export const action = async ({
 
   const formData = await request.formData();
 
+  const projectSettings = project.settings as ProjectSettings;
+
   const intent = formData.get("intent");
   switch (intent) {
     case INTENT_GENERATE_ACCESS: {
@@ -47,17 +65,81 @@ export const action = async ({
     case INTENT_DELETE_ACCESS: {
       return deleteProjectAccessToken(project.id);
     }
+    case INTENT_ENABLE_LIVE_EDIT: {
+      if (projectSettings.liveEdit.enabled) break;
+      return updateProjectSettings(project.id, {
+        ...projectSettings,
+        liveEdit: { enabled: true, url: "https://example.com" },
+      });
+    }
+    case INTENT_DISABLE_LIVE_EDIT: {
+      if (!projectSettings.liveEdit.enabled) break;
+      return updateProjectSettings(project.id, {
+        ...projectSettings,
+        liveEdit: { enabled: false },
+      });
+    }
+    case INTENT_UPDATE_LIVE_EDIT_URL: {
+      if (!projectSettings.liveEdit.enabled) break;
+      const url = formData.get("url") as string;
+      return updateProjectSettings(project.id, {
+        ...projectSettings,
+        liveEdit: { enabled: true, url },
+      });
+    }
   }
 };
 
 const ProjectPageSettings = () => {
-  const { accessToken } = useLoaderData<typeof loader>();
+  const { project, accessToken } = useLoaderData<typeof loader>();
+
+  const projectSettings = project.settings as ProjectSettings;
 
   return (
-    <div className="flex flex-col gap-4 divide-y">
+    <div className="flex flex-col gap-4">
       <TypographyH3 className="mt-0">Settings</TypographyH3>
 
-      <div className="flex flex-col gap-2">
+      <Card className="flex flex-col gap-2 p-2" id="liveEdit">
+        <TypographyH4 className="flex items-center gap-2">
+          Live Edit <BetaBadge />
+        </TypographyH4>
+        {projectSettings.liveEdit.enabled ? (
+          <>
+            <Form method="post" className="flex gap-2">
+              <Input
+                type="text"
+                name="url"
+                defaultValue={projectSettings.liveEdit.url}
+              />
+              <Button
+                type="submit"
+                name="intent"
+                value={INTENT_UPDATE_LIVE_EDIT_URL}
+              >
+                Update Live-Edit URL
+              </Button>
+            </Form>
+            <Form method="post">
+              <Button
+                type="submit"
+                name="intent"
+                value={INTENT_DISABLE_LIVE_EDIT}
+                variant="destructive"
+              >
+                Disable Live-Edit
+              </Button>
+            </Form>
+          </>
+        ) : (
+          <Form method="post">
+            <Button type="submit" name="intent" value={INTENT_ENABLE_LIVE_EDIT}>
+              Enable Live-Edit
+            </Button>
+          </Form>
+        )}
+      </Card>
+
+      <Card className="flex flex-col gap-2 p-2" id="accessToken">
         <TypographyH4>Access Token</TypographyH4>
         <div className="flex items-center gap-2">
           {accessToken ? (
@@ -91,7 +173,7 @@ const ProjectPageSettings = () => {
             </>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

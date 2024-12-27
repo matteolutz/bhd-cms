@@ -35,6 +35,8 @@ model Project {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String
 
+  settings Json @default("{\"liveEdit\": { \"enabled\": false }}")
+
   projectAccessToken    ProjectAccessToken[]
   contentBlockBlueprint ContentBlockBlueprint[]
 

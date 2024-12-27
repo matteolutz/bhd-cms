@@ -1,7 +1,13 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
+import { redirect } from "@remix-run/node";
+import { Form, Link, useActionData } from "@remix-run/react";
+import { ChevronLeft } from "lucide-react";
 
+import { TypographyH3 } from "~/components/typography";
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import { createProject } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
 
@@ -12,10 +18,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const title = formData.get("title");
 
   if (typeof title !== "string" || title.length === 0) {
-    return json(
-      { errors: { body: null, title: "Title is required" } },
-      { status: 400 },
-    );
+    return { status: "error", reason: "Title is required" };
   }
 
   const project = await createProject(title, userId);
@@ -27,42 +30,31 @@ export default function NewNotePage() {
   const actionData = useActionData<typeof action>();
 
   return (
-    <Form
-      method="post"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-        width: "100%",
-      }}
-    >
-      <div>
-        <label className="flex w-full flex-col gap-1">
-          <span>Title: </span>
-          <input
-            name="title"
-            className="flex-1 rounded-md border-2 border-blue-500 px-3 text-lg leading-loose"
-            aria-invalid={actionData?.errors?.title ? true : undefined}
-            aria-errormessage={
-              actionData?.errors?.title ? "title-error" : undefined
-            }
-          />
-        </label>
-        {actionData?.errors?.title ? (
-          <div className="pt-1 text-red-700" id="title-error">
-            {actionData.errors.title}
-          </div>
-        ) : null}
+    <div className="flex flex-col gap-2 p-4">
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" asChild>
+          <Link to="../projects">
+            <ChevronLeft />
+          </Link>
+        </Button>
+        <TypographyH3 className="mt-0">New Project</TypographyH3>
       </div>
 
-      <div className="text-right">
-        <button
-          type="submit"
-          className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
-        >
-          Save
-        </button>
-      </div>
-    </Form>
+      {actionData?.status === "error" ? (
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{actionData.reason}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <Form className="flex flex-col gap-8 p-2" method="post">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="inputTitle">Title</Label>
+          <Input id="inputTitle" name="title" type="text" required />
+        </div>
+
+        <Button type="submit">Create Project</Button>
+      </Form>
+    </div>
   );
 }

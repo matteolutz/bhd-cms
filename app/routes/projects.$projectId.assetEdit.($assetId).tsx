@@ -29,6 +29,7 @@ import {
 } from "~/models/asset.server";
 import { getProjectByIdForUserId } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
+import { formatFileSize } from "~/utils/fileSize";
 import { invariantFieldRequired } from "~/utils/invariant";
 
 export const action = async ({
@@ -211,16 +212,23 @@ const ProjectPageEditAsset = () => {
                   {acceptedFiles.length > 0 ? (
                     acceptedFiles.map((file) => (
                       <div key={file.name}>
-                        <TypographyInlineCode>
-                          {file.name} - {file.size} bytes
-                        </TypographyInlineCode>
+                        <TypographyInlineCode>{file.name}</TypographyInlineCode>
+                        <span className="text-xs">
+                          {" "}
+                          - {formatFileSize(file.size)}
+                        </span>
                       </div>
                     ))
                   ) : (
-                    <p>
-                      {!isDragActive
-                        ? "Drag n drop some files here, or click to select files"
-                        : "Drop files..."}
+                    <p className="text-xs">
+                      {!isDragActive ? (
+                        <>
+                          <i>Drag and Drop</i> files here, or click to select
+                          files
+                        </>
+                      ) : (
+                        "Drop files..."
+                      )}
                     </p>
                   )}
                 </div>

@@ -2,6 +2,7 @@ import { LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link, NavLink, Outlet, useLoaderData } from "@remix-run/react";
 import { ChevronLeft, ChevronUp, User2 } from "lucide-react";
 
+import BetaBadge from "~/components/betaBadge";
 import { TypographyH2 } from "~/components/typography";
 import {
   DropdownMenu,
@@ -49,7 +50,9 @@ const ProjectPageLayout = () => {
     <SidebarProvider className="h-screen w-screen">
       <Sidebar className="h-full" collapsible="offcanvas">
         <SidebarHeader>
-          <TypographyH2 className="m-0">{project.title}</TypographyH2>
+          <TypographyH2 className="m-0 text-foreground">
+            {project.title}
+          </TypographyH2>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
@@ -85,7 +88,7 @@ const ProjectPageLayout = () => {
                   <NavLink to="live">
                     {({ isActive }) => (
                       <SidebarMenuButton isActive={isActive}>
-                        <span>⚡️</span> <span>Live-Edit</span>
+                        <span>⚡️</span> <span>Live-Edit</span> <BetaBadge />
                       </SidebarMenuButton>
                     )}
                   </NavLink>

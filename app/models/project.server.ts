@@ -6,6 +6,10 @@ import { ContentBlockBlueprintSchema } from "./contentBlockBlueprint";
 
 export type { Project } from "@prisma/client";
 
+export interface ProjectSettings {
+  liveEdit: { enabled: true; url: string } | { enabled: false };
+}
+
 export const getProjectById = (id: Project["id"]): Promise<Project | null> =>
   prisma.project.findUnique({ where: { id } });
 
@@ -26,6 +30,9 @@ export const createProject = async (
     data: {
       title,
       userId,
+      settings: {
+        liveEdit: { enabled: false },
+      } as ProjectSettings,
     },
   });
 
@@ -55,16 +62,18 @@ export const createProject = async (
   return project;
 };
 
-export const getProjectAccessToken = (
+export const getProjectAccessTokenForUserId = (
   projectId: Project["id"],
   userId: User["id"],
-): Promise<string | null> =>
+): Promise<[Project, string | null] | null> =>
   prisma.project
     .findUnique({
       where: { id: projectId, userId },
       include: { projectAccessToken: true },
     })
-    .then((project) => project?.projectAccessToken[0]?.token ?? null);
+    .then((project) =>
+      project ? [project, project.projectAccessToken[0]?.token ?? null] : null,
+    );
 
 export const createProjectAccessToken = (
   projectId: Project["id"],
@@ -82,4 +91,13 @@ export const deleteProjectAccessToken = (
     where: {
       projectId,
     },
+  });
+
+export const updateProjectSettings = (
+  projectId: Project["id"],
+  settings: ProjectSettings,
+) =>
+  prisma.project.update({
+    where: { id: projectId },
+    data: { settings },
   });
