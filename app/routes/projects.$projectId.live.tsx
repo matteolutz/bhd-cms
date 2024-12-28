@@ -106,6 +106,13 @@ const ProjectPageLive = () => {
       if (!e || !("bhd" in e.data)) return;
 
       switch (e.data.type) {
+        case "bhd-ready": {
+          iframeRef.current?.contentWindow?.postMessage(
+            { bhd: true, type: "bhd-live-edit" },
+            "*",
+          );
+          break;
+        }
         case "bhd-live-edit-save-result": {
           fetcher.submit(
             { dirtyFields: JSON.stringify(e.data.dirtyFields) },
@@ -123,13 +130,6 @@ const ProjectPageLive = () => {
     };
   }, []);
 
-  const onIframeLoad = () => {
-    if (!iframeRef.current || !iframeRef.current.contentWindow) return;
-    const iframeWindow = iframeRef.current.contentWindow;
-
-    iframeWindow.postMessage({ bhd: true, type: "bhd-live-edit" }, "*");
-  };
-
   const projectSettings = project.settings as unknown as ProjectSettings;
 
   return (
@@ -143,7 +143,6 @@ const ProjectPageLive = () => {
             className="size-full rounded border-2 p-2 shadow-lg"
             src={projectSettings.liveEdit.url}
             ref={iframeRef}
-            onLoad={onIframeLoad}
             title="Live-Edit Iframe"
           />
           <Button
