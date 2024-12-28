@@ -29,6 +29,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  autopgbackup:
+    image: rogersik/autopostgresqlbackup:latest
+    environment:
+      - DBHOST=postgres
+      - USERNAME=postgres
+      - PASSWORD=${POSTGRES_PASSWORD}
+      - CRON_LOG_LEVEL=0
+      - CRON_SCHEDULE=5 4 * * *
+      - LATEST=yes
+    volumes:
+      - postgres-backup:/backups
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    links:
+      - postgres
   pgadmin:
     image: dpage/pgadmin4
     restart: always
@@ -45,5 +62,6 @@ services:
 
 volumes:
   postgres-data:
+  postgres-backup:
   pgadmin-data:
   server-data:
