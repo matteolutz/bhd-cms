@@ -1,43 +1,16 @@
-import { randomUUID } from "crypto";
-import * as path from "path";
-
-import {
-  ActionFunctionArgs,
-  LoaderFunctionArgs,
-  NodeOnDiskFile,
-  redirect,
-  unstable_composeUploadHandlers,
-  unstable_createFileUploadHandler,
-  unstable_createMemoryUploadHandler,
-  unstable_parseMultipartFormData,
-} from "@remix-run/node";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import { LoaderFunctionArgs } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
 import { ChevronLeft } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import Dropzone from "react-dropzone";
+import { useEffect, useState } from "react";
 
-import { TypographyH3, TypographyInlineCode } from "~/components/typography";
-import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
+import { TypographyH3 } from "~/components/typography";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import {
-  ASSET_FILE_ROOT,
-  createAsset,
-  getAssetByIdForProject,
-  getInternalAssetFilePath,
-  updateAsset,
-} from "~/models/asset.server";
-import {
-  getProjectAccessTokenForUserId,
-  getProjectByIdForUserId,
-} from "~/models/project.server";
-import { requireUserId } from "~/session.server";
-import { formatFileSize } from "~/utils/fileSize";
-import { invariantFieldRequired } from "~/utils/invariant";
-import { useSearchParam } from "~/utils/searchParams";
-import * as fs from "fs/promises";
 import { Card } from "~/components/ui/card";
+import { getAssetByIdForProject } from "~/models/asset.server";
+import { getProjectAccessTokenForUserId } from "~/models/project.server";
+import { requireUserId } from "~/session.server";
+import { invariantFieldRequired } from "~/utils/invariant";
+import { useGoBack } from "~/utils/navigate";
 
 export const loader = async ({
   request,
@@ -68,6 +41,8 @@ const ProjectPageViewAsset = () => {
 
   const [objUrl, setObjUrl] = useState<string | null>(null);
 
+  const goBack = useGoBack();
+
   useEffect(() => {
     fetch(`/api/asset/${asset.id}?accessToken=${accessToken}`)
       .then((res) => res.blob())
@@ -80,10 +55,8 @@ const ProjectPageViewAsset = () => {
   return (
     <div className="flex size-full flex-col gap-2">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="../assets">
-            <ChevronLeft />
-          </Link>
+        <Button variant="ghost" size="icon" onClick={goBack}>
+          <ChevronLeft />
         </Button>
         <TypographyH3 className="mt-0">{asset.name}</TypographyH3>
       </div>

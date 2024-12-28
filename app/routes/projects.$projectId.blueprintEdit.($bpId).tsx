@@ -8,7 +8,7 @@ import {
   LoaderFunctionArgs,
   redirect,
 } from "@remix-run/node";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { ChevronLeft } from "lucide-react";
 import { FC, useState } from "react";
 
@@ -39,6 +39,7 @@ import { getProjectByIdForUserId } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
 import { arrayWithout, uniqueArray } from "~/utils/array";
 import { invariantFieldRequired } from "~/utils/invariant";
+import { useGoBack } from "~/utils/navigate";
 import omit from "~/utils/omit";
 import { useSearchParam } from "~/utils/searchParams";
 
@@ -286,6 +287,8 @@ const ProjectPageBlueprintEdit = () => {
   const { contentBlockBlueprints, blueprint } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
+  const goBack = useGoBack();
+
   const [tag] = useSearchParam("tag");
 
   const [blueprintName, setBlueprintName] = useState(
@@ -307,10 +310,8 @@ const ProjectPageBlueprintEdit = () => {
   return (
     <div className="flex size-full flex-col gap-2">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="../blueprints">
-            <ChevronLeft />
-          </Link>
+        <Button variant="ghost" size="icon" onClick={goBack}>
+          <ChevronLeft />
         </Button>
         <TypographyH3 className="mt-0">
           {blueprint ? `Edit Blueprint "${blueprint.name}"` : "New Blueprint"}

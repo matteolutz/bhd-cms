@@ -5,7 +5,7 @@ import {
   LoaderFunctionArgs,
   redirect,
 } from "@remix-run/node";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { ChevronDown, ChevronLeft, ChevronUp, Trash } from "lucide-react";
 import { FC, useEffect, useState } from "react";
 
@@ -45,6 +45,7 @@ import { requireUserId } from "~/session.server";
 import { arrayMax } from "~/utils/array";
 import groupBy from "~/utils/group";
 import { invariantFieldRequired } from "~/utils/invariant";
+import { useGoBack } from "~/utils/navigate";
 import omit from "~/utils/omit";
 import { useSearchParam } from "~/utils/searchParams";
 import { tagEquals } from "~/utils/tag";
@@ -408,6 +409,8 @@ const ProjectPageEditBlock = () => {
     useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
+  const goBack = useGoBack();
+
   const [tag] = useSearchParam("tag");
 
   const [blockName, setBlockName] = useState<string>(block?.name ?? "");
@@ -434,10 +437,8 @@ const ProjectPageEditBlock = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="../blocks">
-            <ChevronLeft />
-          </Link>
+        <Button variant="ghost" size="icon" onClick={goBack}>
+          <ChevronLeft />
         </Button>
         <TypographyH3 className="mt-0">
           {block ? `Edit Content Block "${block.name}"` : "New Content Block"}

@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
-import { Form, Link, useActionData } from "@remix-run/react";
+import { Form, useActionData } from "@remix-run/react";
 import { ChevronLeft } from "lucide-react";
 
 import { TypographyH3 } from "~/components/typography";
@@ -10,6 +10,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { createProject } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
+import { useGoBack } from "~/utils/navigate";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const userId = await requireUserId(request);
@@ -29,13 +30,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 export default function NewNotePage() {
   const actionData = useActionData<typeof action>();
 
+  const goBack = useGoBack();
+
   return (
     <div className="flex flex-col gap-2 p-4">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="../projects">
-            <ChevronLeft />
-          </Link>
+        <Button variant="ghost" size="icon" onClick={goBack}>
+          <ChevronLeft />
         </Button>
         <TypographyH3 className="mt-0">New Project</TypographyH3>
       </div>

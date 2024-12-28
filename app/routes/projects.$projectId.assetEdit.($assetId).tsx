@@ -11,7 +11,7 @@ import {
   unstable_createMemoryUploadHandler,
   unstable_parseMultipartFormData,
 } from "@remix-run/node";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { ChevronLeft } from "lucide-react";
 import { useRef, useState } from "react";
 import Dropzone from "react-dropzone";
@@ -31,6 +31,7 @@ import { getProjectByIdForUserId } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
 import { formatFileSize } from "~/utils/fileSize";
 import { invariantFieldRequired } from "~/utils/invariant";
+import { useGoBack } from "~/utils/navigate";
 import { useSearchParam } from "~/utils/searchParams";
 
 export const action = async ({
@@ -126,6 +127,8 @@ const ProjectPageEditAsset = () => {
   const { asset } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
+  const goBack = useGoBack();
+
   const [tag] = useSearchParam("tag");
 
   const [assetName, setAssetName] = useState<string>(asset?.name ?? "");
@@ -153,10 +156,8 @@ const ProjectPageEditAsset = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="../assets">
-            <ChevronLeft />
-          </Link>
+        <Button variant="ghost" size="icon" onClick={goBack}>
+          <ChevronLeft />
         </Button>
         <TypographyH3 className="mt-0">
           {asset ? `Edit Asset "${asset.name}"` : "New Asset"}

@@ -12,19 +12,19 @@ import {
   useLocation,
   useRouteError,
 } from "@remix-run/react";
+import { Copy } from "lucide-react";
 
 import { getUser } from "~/session.server";
 import stylesheet from "~/styles/tailwind.css";
 
 import { GlobalLoading } from "./components/loader";
-import { Toaster } from "./components/ui/toaster";
 import {
   TypographyH1,
   TypographyInlineCode,
   TypographyP,
 } from "./components/typography";
 import { Button } from "./components/ui/button";
-import { Copy } from "lucide-react";
+import { Toaster } from "./components/ui/toaster";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
