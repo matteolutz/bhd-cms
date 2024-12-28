@@ -8,6 +8,7 @@ export const ALL_BLUEPRINT_SCHEMA_VALUE_TYPES = [
   "string",
   "markdown",
   "number",
+  "boolean",
   "block",
   "blueprint-block",
   "asset",
@@ -28,6 +29,9 @@ export type ContentBlockBlueprintSchemaValue =
     }
   | {
       type: "number";
+    }
+  | {
+      type: "boolean";
     }
   | {
       type: "block";
@@ -66,6 +70,8 @@ export const getDisplayNameForContentBlockBlueprintSchemaValue = (
         return `blueprint-block (${value.blueprint})`;
       case "asset":
         return `asset (${value.assetTypes.join(", ")})`;
+      case "boolean":
+        return "boolean";
     }
   })();
 
@@ -97,6 +103,8 @@ const getZodSchemaForContentBlockBlueprintSchemaValue = (
       return optional ? z.string().optional() : z.string(); // blueprint id
     case "asset":
       return optional ? z.string().optional() : z.string(); // asset id
+    case "boolean":
+      return optional ? z.boolean().optional() : z.boolean();
   }
 };
 

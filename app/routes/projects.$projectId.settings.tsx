@@ -1,6 +1,7 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useFetcher, useLoaderData } from "@remix-run/react";
 import { Copy } from "lucide-react";
+import { useState } from "react";
 
 import BetaBadge from "~/components/betaBadge";
 import {
@@ -14,6 +15,7 @@ import { Card } from "~/components/ui/card";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
 import { useToast } from "~/hooks/use-toast";
+import { cn } from "~/lib/utils";
 import { ALL_PROJECT_BETA_FEATURE_FLAGS } from "~/models/project";
 import {
   createProjectAccessToken,
@@ -103,6 +105,8 @@ export const action = async ({
       });
     }
   }
+
+  return { error: "Invalid intent." };
 };
 
 const ProjectPageSettings = () => {
@@ -112,6 +116,10 @@ const ProjectPageSettings = () => {
   const { toast } = useToast();
 
   const fetcher = useFetcher<typeof action>();
+
+  const [liveEditUrlInputValue, setLiveEditUrlInputValue] = useState<string>(
+    projectSettings.liveEdit.enabled ? projectSettings.liveEdit.url : "",
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -205,9 +213,16 @@ const ProjectPageSettings = () => {
           <>
             <Form method="post" className="flex gap-2">
               <Input
+                value={liveEditUrlInputValue}
+                onChange={(e) => setLiveEditUrlInputValue(e.target.value)}
                 type="text"
                 name="url"
                 defaultValue={projectSettings.liveEdit.url}
+                className={cn(
+                  "transition-colors",
+                  liveEditUrlInputValue !== projectSettings.liveEdit.url &&
+                    "border-2 border-destructive",
+                )}
               />
               <Button
                 type="submit"
@@ -270,6 +285,41 @@ const ProjectPageSettings = () => {
             </div>
           ))}
         </fetcher.Form>
+      </Card>
+
+      <Card
+        className="flex flex-col gap-2 border-2 border-destructive p-4"
+        id="dangerZone"
+      >
+        <TypographyH4 className="flex items-center">Danger Zone</TypographyH4>
+
+        <div className="flex flex-col divide-y">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex flex-col justify-center">
+              <span className="text-sm font-medium">Transfer ownership</span>
+              <span className="text-sm text-muted-foreground">
+                Transfer the ownership of this project to another user. This
+                action cannot be undone.
+              </span>
+            </div>
+            <Button variant="destructive" type="button">
+              Transfer
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-between p-4">
+            <div className="flex flex-col justify-center">
+              <span className="text-sm font-medium">Delete this project</span>
+              <span className="text-sm text-muted-foreground">
+                This action cannot be undone. All Blueprints, Content Blocks,
+                Assets, etc. will be deleted.
+              </span>
+            </div>
+            <Button variant="destructive" type="button">
+              Delete this project
+            </Button>
+          </div>
+        </div>
       </Card>
     </div>
   );

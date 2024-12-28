@@ -140,7 +140,7 @@ const ProjectPageBlocks = () => {
                     href="javascript:void(0)"
                     onClick={setTagPath.bind(this, null)}
                   >
-                    📦 Content-Blocks
+                    📦 Content Blocks
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 {tagPathParts.map((tag, index) => (
@@ -219,7 +219,7 @@ const ProjectPageBlocks = () => {
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>
-                              Delete Content-Block{" "}
+                              Delete Content Block{" "}
                               <TypographyInlineCode>
                                 {block.name}
                               </TypographyInlineCode>
@@ -248,6 +248,16 @@ const ProjectPageBlocks = () => {
                 </CollapsibleTrigger>
 
                 <CollapsibleContent className="border-t px-4 py-2 text-sm">
+                  <div className="mb-2 p-2">
+                    <strong>Blueprint</strong>:{" "}
+                    <Button className="m-0 size-fit p-0" variant="link" asChild>
+                      <Link
+                        to={`../blueprints?tagPath=${block.contentBlockBlueprint.tag ?? ""}`}
+                      >
+                        {block.contentBlockBlueprint.name}
+                      </Link>
+                    </Button>
+                  </div>
                   <ul className="flex flex-col gap-2">
                     {Object.entries(
                       block.content as Record<string, unknown>,
@@ -276,7 +286,7 @@ const ProjectPageBlocks = () => {
                 <PlusCircle className="h-4 w-4" />
                 <div className="flex-1">
                   <div className="truncate text-sm font-medium">
-                    Create New Content-Block
+                    Create New Content Block
                   </div>
                 </div>
               </Link>
@@ -340,7 +350,7 @@ const ProjectPageBlocks = () => {
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
                                     <AlertDialogTitle>
-                                      Delete Content-Block{" "}
+                                      Delete Content Block{" "}
                                       <TypographyInlineCode>
                                         {block.name}
                                       </TypographyInlineCode>

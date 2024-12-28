@@ -11,7 +11,9 @@ import { FC, useEffect, useState } from "react";
 
 import { TypographyH3 } from "~/components/typography";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
@@ -150,7 +152,7 @@ export const loader = async ({
 
 const SchemaValueInputComponent: FC<{
   fieldName: string;
-  schemaValue: ContentBlockBlueprintSchemaValue;
+  schemaValue: ContentBlockBlueprintSchemaValue & { optional?: boolean };
   content: Record<string, unknown>;
   setContent: (value: Record<string, unknown>) => void;
   data: {
@@ -172,7 +174,6 @@ const SchemaValueInputComponent: FC<{
           ? Object.fromEntries(contentArray.map((c, idx) => [idx, c]))
           : {},
       );
-      console.log(localContent);
 
       // eslint-disable-next-line react-hooks/rules-of-hooks
       useEffect(() => {
@@ -298,6 +299,18 @@ const SchemaValueInputComponent: FC<{
         />
       );
     }
+    case "boolean":
+      return (
+        <Checkbox
+          checked={(content[fieldName] as boolean) ?? false}
+          onCheckedChange={(checked) =>
+            setContent({
+              ...content,
+              [fieldName]: checked,
+            })
+          }
+        />
+      );
     case "markdown":
       return (
         <Tabs defaultValue="editor" className="w-full">
@@ -414,6 +427,10 @@ const ProjectPageEditBlock = () => {
     block ? (block.content as Record<string, unknown>) : {},
   );
 
+  useEffect(() => {
+    console.log("CONTENT UPDATE", content);
+  }, [content]);
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-1">
@@ -494,7 +511,10 @@ const ProjectPageEditBlock = () => {
                 .schema as ContentBlockBlueprintSchema,
             ).map(([fieldName, fieldValue]) => (
               <div className="flex flex-col gap-2" key={fieldName}>
-                <h5>{fieldName}</h5>
+                <div className="flex items-center gap-1">
+                  <h5>{fieldName}</h5>{" "}
+                  {fieldValue.optional ? <Badge>Optional</Badge> : null}
+                </div>
                 <div>
                   <SchemaValueInputComponent
                     fieldName={fieldName}

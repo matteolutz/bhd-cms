@@ -177,7 +177,7 @@ const ProjectPageLayout = () => {
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-      <main className="size-full overflow-hidden p-4">
+      <main className="size-full overflow-x-hidden p-4">
         <Outlet context={{ project }} />
       </main>
     </SidebarProvider>

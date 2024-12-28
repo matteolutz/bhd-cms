@@ -31,6 +31,7 @@ import { getProjectByIdForUserId } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
 import { formatFileSize } from "~/utils/fileSize";
 import { invariantFieldRequired } from "~/utils/invariant";
+import { useSearchParam } from "~/utils/searchParams";
 
 export const action = async ({
   request,
@@ -125,8 +126,12 @@ const ProjectPageEditAsset = () => {
   const { asset } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
+  const [tag] = useSearchParam("tag");
+
   const [assetName, setAssetName] = useState<string>(asset?.name ?? "");
-  const [assetTag, setAssetTag] = useState<string>(asset?.tag ?? "");
+  const [assetTag, setAssetTag] = useState<string>(
+    asset ? (asset.tag ?? "") : (tag ?? ""),
+  );
 
   const hiddenInputRef = useRef<HTMLInputElement>(null);
 
