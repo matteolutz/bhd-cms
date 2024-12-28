@@ -5,6 +5,17 @@ import { useEffect, useRef } from "react";
 
 import BetaBadge from "~/components/betaBadge";
 import { TypographyH3 } from "~/components/typography";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
 import { useToast } from "~/hooks/use-toast";
 import { updateBlockContentForProjectId } from "~/models/contentBlock.server";
@@ -92,7 +103,7 @@ const ProjectPageLive = () => {
       return;
 
     toast({
-      description: `Successfully ${fetcher.data.saved} fields saved.`,
+      description: `Successfully saved ${fetcher.data.saved} fields.`,
     });
 
     iframeRef.current?.contentWindow?.postMessage(
@@ -145,18 +156,39 @@ const ProjectPageLive = () => {
             ref={iframeRef}
             title="Live-Edit Iframe"
           />
-          <Button
-            onClick={() => {
-              iframeRef.current?.contentWindow?.postMessage(
-                { bhd: true, type: "bhd-live-edit-save" },
-                "*",
-              );
-            }}
-            type="button"
-            disabled={fetcher.state === "submitting"}
-          >
-            Save
-          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger
+              disabled={fetcher.state === "submitting"}
+              type="button"
+              asChild
+            >
+              <Button>Save</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Save Changes</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to save the changes? Please note that
+                  Live-Edit is still in beta and might not work as expected.
+                  Please make sure to backup your content before saving.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    iframeRef.current?.contentWindow?.postMessage(
+                      { bhd: true, type: "bhd-live-edit-save" },
+                      "*",
+                    );
+                  }}
+                >
+                  Save
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
       ) : (
         <p>

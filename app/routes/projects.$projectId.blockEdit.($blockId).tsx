@@ -298,7 +298,7 @@ const SchemaValueInputComponent: FC<{
     }
     case "markdown":
       return (
-        <Tabs defaultValue="editor">
+        <Tabs defaultValue="editor" className="w-full">
           <TabsList>
             <TabsTrigger value="editor">Editor</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
