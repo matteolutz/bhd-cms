@@ -44,6 +44,8 @@ import { arrayMax } from "~/utils/array";
 import groupBy from "~/utils/group";
 import { invariantFieldRequired } from "~/utils/invariant";
 import omit from "~/utils/omit";
+import { useSearchParam } from "~/utils/searchParams";
+import { tagEquals } from "~/utils/tag";
 
 export const action = async ({
   request,
@@ -369,7 +371,10 @@ const SchemaValueInputComponent: FC<{
                 (block) =>
                   (schemaValue.type === "block" &&
                     (!schemaValue.tag ||
-                      schemaValue.tag === block.contentBlockBlueprint.tag)) ||
+                      tagEquals(
+                        schemaValue.tag,
+                        block.contentBlockBlueprint.tag,
+                      ))) ||
                   (schemaValue.type === "blueprint-block" &&
                     schemaValue.blueprint === block.contentBlockBlueprintId),
               )
@@ -390,13 +395,17 @@ const ProjectPageEditBlock = () => {
     useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
+  const [tag] = useSearchParam("tag");
+
   const [blockName, setBlockName] = useState<string>(block?.name ?? "");
 
   const [selectedBlueprint, setSelectedBlueprint] = useState<
     ContentBlockBlueprint["id"] | null
   >(block ? block.contentBlockBlueprintId : null);
 
-  const [blockTag, setBlockTag] = useState<string>(block?.tag ?? "");
+  const [blockTag, setBlockTag] = useState<string>(
+    block ? (block.tag ?? "") : (tag ?? ""),
+  );
 
   const getBlueprint = (id: ContentBlockBlueprint["id"]) =>
     blueprints.find((b) => b.id === id);

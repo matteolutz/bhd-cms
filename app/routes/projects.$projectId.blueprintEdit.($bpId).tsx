@@ -40,6 +40,7 @@ import { requireUserId } from "~/session.server";
 import { arrayWithout, uniqueArray } from "~/utils/array";
 import { invariantFieldRequired } from "~/utils/invariant";
 import omit from "~/utils/omit";
+import { useSearchParam } from "~/utils/searchParams";
 
 export const action = async ({
   request,
@@ -285,11 +286,13 @@ const ProjectPageBlueprintEdit = () => {
   const { contentBlockBlueprints, blueprint } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
+  const [tag] = useSearchParam("tag");
+
   const [blueprintName, setBlueprintName] = useState(
     blueprint ? blueprint.name : "",
   );
   const [blueprintTag, setBlueprintTag] = useState(
-    blueprint ? (blueprint.tag ?? "") : "",
+    blueprint ? (blueprint.tag ?? "") : (tag ?? ""),
   );
   const [blueprintType, setBlueprintType] = useState(
     blueprint ? blueprint.type : "",

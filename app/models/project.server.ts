@@ -3,11 +3,13 @@ import { Project, ProjectAccessToken, User } from "@prisma/client";
 import { prisma } from "~/db.server";
 
 import { ContentBlockBlueprintSchema } from "./contentBlockBlueprint";
+import { ALL_PROJECT_BETA_FEATURE_FLAGS } from "./project";
 
 export type { Project } from "@prisma/client";
 
 export interface ProjectSettings {
   liveEdit: { enabled: true; url: string } | { enabled: false };
+  betaFeatures?: (typeof ALL_PROJECT_BETA_FEATURE_FLAGS)[number][];
 }
 
 export const getProjectById = (id: Project["id"]): Promise<Project | null> =>
@@ -32,6 +34,7 @@ export const createProject = async (
       userId,
       settings: {
         liveEdit: { enabled: false },
+        betaFeatures: [],
       } as ProjectSettings,
     },
   });
