@@ -170,8 +170,9 @@ const ProjectPageLive = () => {
                 <AlertDialogTitle>Save Changes</AlertDialogTitle>
                 <AlertDialogDescription>
                   Are you sure you want to save the changes? Please note that
-                  Live-Edit is still in beta and might not work as expected.
-                  Please make sure to backup your content before saving.
+                  Live-Edit is still in <BetaBadge /> and might not work as
+                  expected. Please make sure to backup your content before
+                  saving.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
