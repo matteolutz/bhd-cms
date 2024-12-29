@@ -525,6 +525,7 @@ const ProjectPageEditBlock = () => {
                   "flex flex-col p-2",
                   selectedFieldName === fieldName && "shadow-highlight",
                 )}
+                id={`field-${fieldName}`}
                 key={fieldName}
               >
                 <div className="flex items-center gap-1">

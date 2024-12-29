@@ -129,7 +129,7 @@ const ProjectPageLive = () => {
                 </div>
                 <iframe
                   title="Test"
-                  src={`/projects/${project.id}/blockEdit/${selectedField.blockId}?frame=true&field=${selectedField.fieldName}`}
+                  src={`/projects/${project.id}/blockEdit/${selectedField.blockId}?frame=true&field=${selectedField.fieldName}#field-${selectedField.fieldName}`}
                   className="size-full"
                 />
               </>
