@@ -3,7 +3,7 @@ import { Form, Link, NavLink, Outlet, useLoaderData } from "@remix-run/react";
 import { ChevronLeft, ChevronUp, User2 } from "lucide-react";
 
 import BetaBadge from "~/components/betaBadge";
-import { TypographyH2 } from "~/components/typography";
+import { TypographyH2, TypographyH3 } from "~/components/typography";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +22,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
+  SidebarTrigger,
 } from "~/components/ui/sidebar";
 import { getProjectByIdForUserId } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
@@ -183,7 +184,13 @@ const ProjectPageLayout = () => {
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-      <main className="size-full overflow-x-hidden p-4">
+      <main className="flex size-full flex-col gap-2 overflow-x-hidden p-4">
+        <div className="flex items-center gap-2 border-b min-[768px]:hidden">
+          <SidebarTrigger />
+          <TypographyH3 className="m-0 text-foreground">
+            {project.title}
+          </TypographyH3>
+        </div>
         <Outlet context={{ project }} />
       </main>
     </SidebarProvider>
