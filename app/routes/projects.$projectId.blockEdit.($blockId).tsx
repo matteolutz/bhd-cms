@@ -13,6 +13,7 @@ import { TypographyH3 } from "~/components/typography";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -26,6 +27,7 @@ import {
 } from "~/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Textarea } from "~/components/ui/textarea";
+import { cn } from "~/lib/utils";
 import { getAllAssetsForProject } from "~/models/asset.server";
 import {
   createContentBlock,
@@ -121,7 +123,7 @@ export const action = async ({
     );
   }
 
-  return redirect("../blocks");
+  return formData.get("isIframe") === "true" ? {} : redirect("../blocks");
 };
 
 export const loader = async ({
@@ -413,6 +415,11 @@ const ProjectPageEditBlock = () => {
 
   const [tag] = useSearchParam("tag");
 
+  const [_isIframe] = useSearchParam("frame");
+  const isIframe = _isIframe === "true";
+
+  const [selectedFieldName] = useSearchParam("field");
+
   const [blockName, setBlockName] = useState<string>(block?.name ?? "");
 
   const [selectedBlueprint, setSelectedBlueprint] = useState<
@@ -436,14 +443,16 @@ const ProjectPageEditBlock = () => {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" onClick={goBack}>
-          <ChevronLeft />
-        </Button>
-        <TypographyH3 className="mt-0">
-          {block ? `Edit Content Block "${block.name}"` : "New Content Block"}
-        </TypographyH3>
-      </div>
+      {!isIframe ? (
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={goBack}>
+            <ChevronLeft />
+          </Button>
+          <TypographyH3 className="mt-0">
+            {block ? `Edit Content Block "${block.name}"` : "New Content Block"}
+          </TypographyH3>
+        </div>
+      ) : null}
 
       {actionData?.status === "error" ? (
         <Alert variant="destructive">
@@ -505,15 +514,21 @@ const ProjectPageEditBlock = () => {
 
         {/* eslint-disable-next-line react/jsx-no-leaked-render */}
         {selectedBlueprint && (
-          <div className="flex flex-col gap-2 divide-y">
+          <div className="flex flex-col gap-4">
             <h4>Fields</h4>
             {Object.entries(
               getBlueprint(selectedBlueprint)!
                 .schema as ContentBlockBlueprintSchema,
             ).map(([fieldName, fieldValue]) => (
-              <div className="flex flex-col gap-2" key={fieldName}>
+              <Card
+                className={cn(
+                  "flex flex-col p-2",
+                  selectedFieldName === fieldName && "shadow-highlight",
+                )}
+                key={fieldName}
+              >
                 <div className="flex items-center gap-1">
-                  <h5>{fieldName}</h5>{" "}
+                  <Label>{fieldName}</Label>{" "}
                   {fieldValue.optional ? <Badge>Optional</Badge> : null}
                 </div>
                 <div>
@@ -525,12 +540,27 @@ const ProjectPageEditBlock = () => {
                     data={{ contentBlocks, assets }}
                   />
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         )}
         <input type="hidden" name="content" value={JSON.stringify(content)} />
-        <Button type="submit">{block ? "Save Block" : "Create Block"}</Button>
+        <input
+          type="hidden"
+          name="isIframe"
+          value={isIframe ? "true" : "false"}
+        />
+        <Button
+          onClick={() =>
+            window.top?.postMessage({
+              bhd: true,
+              type: "bhd-internal-live-edit-save",
+            })
+          }
+          type="submit"
+        >
+          {block ? "Save Block" : "Create Block"}
+        </Button>
       </Form>
     </div>
   );

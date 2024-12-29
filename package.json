@@ -58,6 +58,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.3.5",
+    "react-resizable-panels": "^2.1.7",
     "source-map-support": "^0.5.21",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",

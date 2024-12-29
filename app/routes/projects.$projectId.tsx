@@ -27,6 +27,7 @@ import { getProjectByIdForUserId } from "~/models/project.server";
 import { requireUserId } from "~/session.server";
 import { useUser } from "~/utils";
 import { invariantFieldRequired } from "~/utils/invariant";
+import { useSearchParam } from "~/utils/searchParams";
 
 export const loader = async ({
   request,
@@ -46,7 +47,12 @@ const ProjectPageLayout = () => {
   const { project } = useLoaderData<typeof loader>();
   const user = useUser();
 
-  return (
+  const [_isIframe] = useSearchParam("frame");
+  const isIframe = _isIframe === "true";
+
+  return isIframe ? (
+    <Outlet />
+  ) : (
     <SidebarProvider className="h-screen w-screen">
       <Sidebar className="h-full" collapsible="offcanvas">
         <SidebarHeader>
