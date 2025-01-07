@@ -63,5 +63,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/dreamsofcode-io/guestbook:${{ needs.commit-hash.outputs.commit_hash }}
-            ghcr.io/dreamsofcode-io/guestbook:latest
+            ghcr.io/matteolutz/bhd-cms:${{ needs.commit-hash.outputs.commit_hash }}
+            ghcr.io/matteolutz/bhd-cms:latest
